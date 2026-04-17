@@ -43,8 +43,8 @@ export function CarSelector({ make, setMake, model, setModel, year, setYear, ext
     };
 
     const selectStyle: React.CSSProperties = {
-        flex: 1,
-        minWidth: '140px',
+        width: '100%',
+        minWidth: 0,
         padding: '10px 12px',
         backgroundColor: 'var(--card)',
         border: '1px solid var(--border)',
@@ -77,9 +77,9 @@ export function CarSelector({ make, setMake, model, setModel, year, setYear, ext
                 </span>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
                 {/* Make */}
-                <div>
+                <div style={{ minWidth: 0 }}>
                     <label style={labelStyle}>МАРКА</label>
                     <select value={make} onChange={e => handleMakeChange(e.target.value)} style={selectStyle}>
                         <option value="">— Выберите —</option>
@@ -88,7 +88,7 @@ export function CarSelector({ make, setMake, model, setModel, year, setYear, ext
                 </div>
 
                 {/* Model */}
-                <div>
+                <div style={{ minWidth: 0 }}>
                     <label style={labelStyle}>МОДЕЛЬ</label>
                     <select
                         value={model}
@@ -102,7 +102,7 @@ export function CarSelector({ make, setMake, model, setModel, year, setYear, ext
                 </div>
 
                 {/* Year */}
-                <div>
+                <div style={{ minWidth: 0 }}>
                     <label style={labelStyle}>ГОД</label>
                     <select
                         value={year}
@@ -116,7 +116,7 @@ export function CarSelector({ make, setMake, model, setModel, year, setYear, ext
                 </div>
 
                 {/* Exterior Color */}
-                <div>
+                <div style={{ minWidth: 0 }}>
                     <label style={labelStyle}>ЦВЕТ КУЗОВА</label>
                     <select
                         value={extColor}
@@ -141,10 +141,11 @@ export function CarSelector({ make, setMake, model, setModel, year, setYear, ext
                     backgroundColor: 'var(--bg)', borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border)',
                     fontSize: '0.78rem', color: 'var(--text-muted)',
-                    display: 'flex', alignItems: 'center', gap: '8px'
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    flexWrap: 'wrap', wordBreak: 'break-word'
                 }}>
                     <span style={{ color: 'var(--text-dark)' }}>В промпте:</span>
-                    <span className="mono" style={{ color: 'var(--accent)' }}>
+                    <span className="mono" style={{ color: 'var(--accent)', minWidth: 0, overflowWrap: 'anywhere' }}>
                         {extColor ? `${extColor} ` : ''}{year ? `${year} ` : ''}{make}{model ? ` ${model}` : ''}{selectedModelObj ? ` ${selectedModelObj.type}` : ''}
                     </span>
                 </div>
