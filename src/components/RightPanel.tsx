@@ -205,40 +205,63 @@ export function RightPanel({ colors, setColors, activeZone, setActiveZone, trimI
                                                         backgroundColor: zoneColor, cursor: 'pointer', position: 'relative'
                                                     }}
                                                 >
-                                                    <input
-                                                        type="color"
-                                                        value={zoneColor}
-                                                        onChange={(e) => handleColorChange(zone.id, e.target.value)}
-                                                        onClick={(e) => e.stopPropagation()}
-                                                        style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }}
-                                                    />
+                                                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', textShadow: '0 0 2px black' }}>▾</span>
                                                 </div>
                                             </div>
 
                                             {/* POPUP PALETTE */}
                                             {isPopoverOpen && (
                                                 <div style={{
-                                                    padding: '12px 16px 14px 48px', backgroundColor: '#101012', borderLeft: '3px solid var(--border)', borderBottom: '1px solid #0e0e10'
+                                                    padding: '14px 16px 14px 44px', backgroundColor: '#101012', borderLeft: '3px solid var(--border)', borderBottom: '1px solid #0e0e10'
                                                 }}>
-                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
-                                                        {SW.map((sw: any, i: number) => (
-                                                            <button
-                                                                key={i}
-                                                                onClick={() => { handleColorChange(zone.id, sw.h); setOpenPopover(null); }}
-                                                                style={{
-                                                                    width: '36px', height: '36px', borderRadius: '6px',
-                                                                    backgroundColor: sw.h,
-                                                                    border: zoneColor.toUpperCase() === sw.h.toUpperCase() ? '2.5px solid white' : '1.5px solid var(--border)',
-                                                                    display: 'flex', justifyContent: 'center', alignItems: 'center',
-                                                                    color: 'white', textShadow: '0 1px 3px rgba(0,0,0,0.8)', fontSize: '15px', transition: 'all 0.15s'
-                                                                }}
-                                                            >
-                                                                {zoneColor.toUpperCase() === sw.h.toUpperCase() && '✓'}
-                                                            </button>
-                                                        ))}
+                                                    
+                                                    {/* USED COLORS IN INTERIOR */}
+                                                    <div style={{ marginBottom: '14px' }}>
+                                                        <span style={{ fontSize: '0.65rem', color: 'var(--text-dark)', display: 'block', marginBottom: '8px', letterSpacing: '1px' }}>ИСПОЛЬЗУЮТСЯ В САЛОНЕ</span>
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                                            {[...new Set(Object.values(colors).map(c => c.toUpperCase()))].map((c: string, i: number) => (
+                                                                <button
+                                                                    key={`used-${i}`}
+                                                                    onClick={() => { handleColorChange(zone.id, c); setOpenPopover(null); }}
+                                                                    style={{
+                                                                        width: '32px', height: '32px', borderRadius: '6px',
+                                                                        backgroundColor: c,
+                                                                        border: zoneColor.toUpperCase() === c ? '2.5px solid white' : '1.5px solid var(--border)',
+                                                                        display: 'flex', justifyContent: 'center', alignItems: 'center',
+                                                                        color: 'white', textShadow: '0 1px 3px rgba(0,0,0,0.8)', fontSize: '13px', transition: 'all 0.15s'
+                                                                    }}
+                                                                >
+                                                                    {zoneColor.toUpperCase() === c && '✓'}
+                                                                </button>
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dark)' }}>HEX</span>
+
+                                                    {/* RECOMMENDED PALETTE */}
+                                                    <div style={{ marginBottom: '14px' }}>
+                                                        <span style={{ fontSize: '0.65rem', color: 'var(--text-dark)', display: 'block', marginBottom: '8px', letterSpacing: '1px' }}>РЕКОМЕНДОВАННЫЕ</span>
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                                            {SW.map((sw: any, i: number) => (
+                                                                <button
+                                                                    key={`sw-${i}`}
+                                                                    onClick={() => { handleColorChange(zone.id, sw.h); setOpenPopover(null); }}
+                                                                    style={{
+                                                                        width: '32px', height: '32px', borderRadius: '6px',
+                                                                        backgroundColor: sw.h,
+                                                                        border: zoneColor.toUpperCase() === sw.h.toUpperCase() ? '2.5px solid white' : '1.5px solid var(--border)',
+                                                                        display: 'flex', justifyContent: 'center', alignItems: 'center',
+                                                                        color: 'white', textShadow: '0 1px 3px rgba(0,0,0,0.8)', fontSize: '13px', transition: 'all 0.15s'
+                                                                    }}
+                                                                >
+                                                                    {zoneColor.toUpperCase() === sw.h.toUpperCase() && '✓'}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* CUSTOM COLOR PICKER */}
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '10px', borderTop: '1px solid var(--border-active)' }}>
+                                                        <span style={{ fontSize: '0.65rem', color: 'var(--text-dark)', letterSpacing: '1px' }}>СВОЙ ЦВЕТ</span>
                                                         <input
                                                             type="text"
                                                             value={zoneColor.toUpperCase()}
@@ -248,7 +271,7 @@ export function RightPanel({ colors, setColors, activeZone, setActiveZone, trimI
                                                             className="mono"
                                                             style={{ width: '80px', padding: '4px 6px', fontSize: '0.8rem', backgroundColor: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-muted)', borderRadius: '4px' }}
                                                         />
-                                                        <div style={{ width: '28px', height: '24px', position: 'relative', overflow: 'hidden', borderRadius: '4px' }}>
+                                                        <div style={{ width: '28px', height: '26px', position: 'relative', overflow: 'hidden', borderRadius: '4px', border: '1px solid var(--border)' }}>
                                                             <input
                                                                 type="color"
                                                                 value={zoneColor}
