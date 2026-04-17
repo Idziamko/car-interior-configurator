@@ -7,25 +7,56 @@ interface AIPromptProps {
 export function AIPrompt({ promptText }: AIPromptProps) {
     const [copied, setCopied] = useState(false);
 
+    const fallbackCopy = (text: string): boolean => {
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.contentEditable = 'true';
+            ta.style.position = 'fixed';
+            ta.style.top = '0';
+            ta.style.left = '0';
+            ta.style.width = '1px';
+            ta.style.height = '1px';
+            ta.style.opacity = '0';
+            ta.style.pointerEvents = 'none';
+            document.body.appendChild(ta);
+
+            // iOS Safari needs this specific sequence
+            const range = document.createRange();
+            range.selectNodeContents(ta);
+            const sel = window.getSelection();
+            sel?.removeAllRanges();
+            sel?.addRange(range);
+            ta.setSelectionRange(0, text.length);
+
+            const ok = document.execCommand('copy');
+            document.body.removeChild(ta);
+            return ok;
+        } catch (e) {
+            console.error('Fallback copy failed', e);
+            return false;
+        }
+    };
+
     const handleCopy = async () => {
+        let ok = false;
         try {
             if (navigator.clipboard && window.isSecureContext) {
                 await navigator.clipboard.writeText(promptText);
-            } else {
-                // Fallback for non-secure contexts (http, old browsers)
-                const ta = document.createElement('textarea');
-                ta.value = promptText;
-                ta.style.position = 'fixed';
-                ta.style.opacity = '0';
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
+                ok = true;
             }
+        } catch (e) {
+            console.warn('clipboard.writeText failed, trying fallback', e);
+        }
+
+        if (!ok) ok = fallbackCopy(promptText);
+
+        if (ok) {
             setCopied(true);
             setTimeout(() => setCopied(false), 1800);
-        } catch (e) {
-            console.error('Copy failed', e);
+        } else {
+            alert('Не удалось скопировать. Выделите текст вручную.');
         }
     };
 
