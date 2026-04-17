@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 interface AIPromptProps {
     promptText: string;
@@ -7,22 +7,29 @@ interface AIPromptProps {
 export function AIPrompt({ promptText }: AIPromptProps) {
     const [copied, setCopied] = useState(false);
 
-    const fallbackCopy = (text: string): boolean => {
+    // Synchronous fallback using textarea + execCommand — works in user gesture on iOS
+    const execCommandCopy = (text: string): boolean => {
         try {
             const ta = document.createElement('textarea');
             ta.value = text;
-            ta.setAttribute('readonly', '');
-            ta.contentEditable = 'true';
+            // Keep off-screen but interactable — NO readonly (breaks selection on iOS)
             ta.style.position = 'fixed';
             ta.style.top = '0';
             ta.style.left = '0';
             ta.style.width = '1px';
             ta.style.height = '1px';
+            ta.style.padding = '0';
+            ta.style.border = 'none';
+            ta.style.outline = 'none';
+            ta.style.boxShadow = 'none';
+            ta.style.background = 'transparent';
             ta.style.opacity = '0';
-            ta.style.pointerEvents = 'none';
             document.body.appendChild(ta);
 
-            // iOS Safari needs this specific sequence
+            ta.focus();
+            ta.select();
+
+            // iOS Safari/WebKit: Range+Selection+setSelectionRange combo is required
             const range = document.createRange();
             range.selectNodeContents(ta);
             const sel = window.getSelection();
@@ -34,23 +41,24 @@ export function AIPrompt({ promptText }: AIPromptProps) {
             document.body.removeChild(ta);
             return ok;
         } catch (e) {
-            console.error('Fallback copy failed', e);
+            console.error('execCommand copy failed', e);
             return false;
         }
     };
 
-    const handleCopy = async () => {
-        let ok = false;
-        try {
-            if (navigator.clipboard && window.isSecureContext) {
-                await navigator.clipboard.writeText(promptText);
-                ok = true;
-            }
-        } catch (e) {
-            console.warn('clipboard.writeText failed, trying fallback', e);
-        }
+    const handleCopy = (e: React.MouseEvent) => {
+        e.preventDefault();
 
-        if (!ok) ok = fallbackCopy(promptText);
+        // Run synchronous fallback FIRST — guaranteed to stay inside user gesture on iOS
+        let ok = execCommandCopy(promptText);
+
+        // Also try modern Clipboard API as belt-and-suspenders (fire-and-forget)
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(promptText).then(
+                () => { ok = true; },
+                err => console.warn('clipboard.writeText failed', err)
+            );
+        }
 
         if (ok) {
             setCopied(true);
