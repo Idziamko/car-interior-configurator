@@ -34,7 +34,7 @@ function App() {
       `Camera: from open driver's door, 3/4 overhead, full cabin visible. ${u} colors, premium leather & alcantara.`,
       `SEATS — Driver base: ${h("sb_d")}, bolsters: ${h("sv_d")}, headrest: ${h("hr_d")}. Passenger base: ${h("sb_p")}, bolsters: ${h("sv_p")}, headrest: ${h("hr_p")}. Quilted centers.`,
       `DOORS — L upper: ${h("du_l")}, accent: ${h("da_l")}, main: ${h("di_l")}, kick: ${h("dl_l")}, handle: ${h("dh_l")}. R upper: ${h("du_r")}, accent: ${h("da_r")}, main: ${h("di_r")}, kick: ${h("dl_r")}, handle: ${h("dh_r")}.`,
-      `STEERING — Top: ${h("sw_t")}, sides: ${h("sw_s")}, bottom: ${h("sw_b")}. OEM 3-spoke.`,
+      `STEERING — Top: ${h("sw_t")}, sides: ${h("sw_s")}, bottom: ${h("sw_b")}, spokes: ${h("sw_sp")}, center/airbag: ${h("sw_c")}. OEM 3-spoke.`,
       `CONTROLS — Shift knob: ${h("sk")}, boot: ${h("sbo")}. Handbrake: ${h("hh")}, boot: ${h("hbo")}. Armrest: ${h("arm")}. Tunnel: ${h("con")}.`,
       `DASHBOARD — Upper: ${h("dt")}, lower: ${h("db")}. Trim: ${trimN}. OEM Z4 E85.`,
       `FLOOR — Mats: ${h("mat_d")}, ${h("mat_p")}. Footwells: ${h("fw_d")}, ${h("fw_p")}.`,
