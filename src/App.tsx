@@ -28,13 +28,16 @@ function App() {
   // Layout: false = vertical (mobile default), true = horizontal (50/50)
   const [isHorizontal, setIsHorizontal] = useState(false);
 
-  // Persist layout
+  // Persist layout (default horizontal on desktop)
   useEffect(() => {
     const saved = localStorage.getItem('layout_h');
     if (saved === '1') setIsHorizontal(true);
+    else if (saved === null && typeof window !== 'undefined' && window.innerWidth >= 1024) setIsHorizontal(true);
   }, []);
   useEffect(() => {
     localStorage.setItem('layout_h', isHorizontal ? '1' : '0');
+    document.body.classList.toggle('layout-hz', isHorizontal);
+    return () => { document.body.classList.remove('layout-hz'); };
   }, [isHorizontal]);
 
   const handleSelectSwatchGlobal = (hex: string) => {
@@ -137,32 +140,20 @@ function App() {
       </header>
 
       {/* ===== MAIN ===== */}
-      <div className={`main-wrap ${isHorizontal ? 'hz' : 'vt'}`}>
+      {(() => {
+        const svgBlock = (
+          <>
+            <div className="svg-wrapper">
+              <CarInteriorSVG colors={colors} activeZone={activeZone} onZoneClick={setActiveZone} trimId={trimId} trimColor={trimColor} />
+            </div>
+            {carSubtitle && <div className="car-subtitle">{carSubtitle}</div>}
+            {!isHorizontal && (
+              <QuickColorBar activeZone={activeZone} colors={colors} onColorChange={handleQuickColor} />
+            )}
+          </>
+        );
 
-        {/* --- LEFT: always SVG + quick bar + subtitle --- */}
-        <div className="col-left">
-          <div className="svg-wrapper">
-            <CarInteriorSVG colors={colors} activeZone={activeZone} onZoneClick={setActiveZone} trimId={trimId} trimColor={trimColor} />
-          </div>
-          {carSubtitle && (
-            <div className="car-subtitle">{carSubtitle}</div>
-          )}
-          <QuickColorBar activeZone={activeZone} colors={colors} onColorChange={handleQuickColor} />
-        </div>
-
-        {/* --- RIGHT: all settings --- */}
-        <div className="col-right">
-          <CarSelector
-            make={carMake} setMake={setCarMake}
-            model={carModel} setModel={setCarModel}
-            year={carYear} setYear={setCarYear}
-            extColor={extColor} setExtColor={setExtColor}
-          />
-          <CameraAngleSelector selected={cameraAngle} onSelect={setCameraAngle} />
-          <SkinSamples activeZone={activeZone} onSelectCallback={handleSelectSwatchGlobal} />
-          <RightPanel colors={colors} setColors={setColors} activeZone={activeZone} setActiveZone={setActiveZone} trimId={trimId} setTrimId={setTrimId} trimColor={trimColor} setTrimColor={setTrimColor} />
-
-          {/* Mini palette */}
+        const miniPalette = (
           <div className="panel" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
               {AZ.map(z => (
@@ -178,11 +169,42 @@ function App() {
               {AZ.length} зон · {[...new Set(AZ.map(z => (colors[z.id] || '#1A1A1A').toUpperCase()))].length} уникальных цветов
             </p>
           </div>
+        );
 
-          {/* AI Prompt */}
-          <AIPrompt promptText={getPromptText()} />
-        </div>
-      </div>
+        const settingsBlock = (
+          <>
+            {isHorizontal && (
+              <QuickColorBar activeZone={activeZone} colors={colors} onColorChange={handleQuickColor} />
+            )}
+            <SkinSamples activeZone={activeZone} onSelectCallback={handleSelectSwatchGlobal} />
+            <CarSelector
+              make={carMake} setMake={setCarMake}
+              model={carModel} setModel={setCarModel}
+              year={carYear} setYear={setCarYear}
+              extColor={extColor} setExtColor={setExtColor}
+            />
+            <CameraAngleSelector selected={cameraAngle} onSelect={setCameraAngle} />
+            <RightPanel colors={colors} setColors={setColors} activeZone={activeZone} setActiveZone={setActiveZone} trimId={trimId} setTrimId={setTrimId} trimColor={trimColor} setTrimColor={setTrimColor} />
+            {miniPalette}
+            <AIPrompt promptText={getPromptText()} />
+          </>
+        );
+
+        if (isHorizontal) {
+          return (
+            <div className="main-wrap hz">
+              <div className="col-left">{svgBlock}</div>
+              <div className="col-right">{settingsBlock}</div>
+            </div>
+          );
+        }
+        return (
+          <div className="main-wrap vt">
+            {svgBlock}
+            {settingsBlock}
+          </div>
+        );
+      })()}
     </div>
   );
 }
