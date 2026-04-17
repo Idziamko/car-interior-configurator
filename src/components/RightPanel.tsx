@@ -19,6 +19,24 @@ export function RightPanel({ colors, setColors, activeZone, setActiveZone, trimI
     });
     const [openPopover, setOpenPopover] = React.useState<string | null>(null);
 
+    React.useEffect(() => {
+        if (activeZone) {
+            // Find which group contains this activeZone
+            const group = ZG.find(g => g.zones.some(z => z.id === activeZone));
+            if (group) {
+                setOpenGroups(prev => ({ ...prev, [group.g]: true }));
+                
+                // Slight delay to ensure the DOM is updated if the group was closed
+                setTimeout(() => {
+                    const el = document.getElementById(`zone-${activeZone}`);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 50);
+            }
+        }
+    }, [activeZone]);
+
     const toggleGroup = (g: string) => {
         setOpenGroups(prev => ({ ...prev, [g]: !prev[g] }));
     };
@@ -159,7 +177,7 @@ export function RightPanel({ colors, setColors, activeZone, setActiveZone, trimI
                                     const isPopoverOpen = openPopover === zone.id;
 
                                     return (
-                                        <div key={zone.id} style={{ position: 'relative' }}>
+                                        <div key={zone.id} id={`zone-${zone.id}`} style={{ position: 'relative' }}>
                                             <div
                                                 onClick={() => setActiveZone(zone.id)}
                                                 style={{
