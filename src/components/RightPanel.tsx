@@ -21,18 +21,10 @@ export function RightPanel({ colors, setColors, activeZone, setActiveZone, trimI
 
     React.useEffect(() => {
         if (activeZone) {
-            // Find which group contains this activeZone
+            // Find which group contains this activeZone and open it
             const group = ZG.find(g => g.zones.some(z => z.id === activeZone));
             if (group) {
                 setOpenGroups(prev => ({ ...prev, [group.g]: true }));
-                
-                // Slight delay to ensure the DOM is updated if the group was closed
-                setTimeout(() => {
-                    const el = document.getElementById(`zone-${activeZone}`);
-                    if (el) {
-                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                }, 50);
             }
         }
     }, [activeZone]);

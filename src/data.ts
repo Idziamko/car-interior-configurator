@@ -138,70 +138,108 @@ export const PR = [
   }
 ];
 
-// High quality design palettes mapping Primary(P), Secondary(S), Base(B), Details/Stitch(D), Piping(Pi)
-const PALS = [
-  { P: "#8B4513", S: "#1A1A1A", B: "#1A1A1A", D: "#DEB887", Pi: "#1A1A1A", T: "Коричневая Классика" },
-  { P: "#1B4965", S: "#0D1B2A", B: "#0D1B2A", D: "#5BC0BE", Pi: "#5BC0BE", T: "Темный Океан" },
-  { P: "#8B0000", S: "#1A1A1A", B: "#1A1A1A", D: "#FFFFFF", Pi: "#8B0000", T: "Красная Строчка" },
-  { P: "#4A5548", S: "#1A1A1A", B: "#1A1A1A", D: "#8B9A6B", Pi: "#1A1A1A", T: "Темный Хаки" },
-  { P: "#C06030", S: "#2A2A2A", B: "#1A1A1A", D: "#E8A070", Pi: "#1A1A1A", T: "Терракота" },
-  { P: "#E8602C", S: "#1A1A1A", B: "#1A1A1A", D: "#FFA07A", Pi: "#E8602C", T: "Оранжевый Спорт" },
-  { P: "#F0E6D3", S: "#333333", B: "#1A1A1A", D: "#8B7355", Pi: "#1A1A1A", T: "Светлый Беж" }
+// ========== PROCEDURAL RANDOMIZER ==========
+
+// Funny name parts for generated palettes
+const ADJ = [
+  "Дерзкий", "Бархатный", "Ледяной", "Пьяный", "Сонный", "Яростный",
+  "Тихий", "Дымный", "Шёлковый", "Медный", "Огненный", "Лунный",
+  "Закатный", "Штормовой", "Угольный", "Нежный", "Хищный", "Мятный",
+  "Янтарный", "Космический", "Рваный", "Пыльный", "Острый", "Брутальный",
+  "Сумеречный", "Утренний", "Пряный", "Туманный", "Мрачный", "Блестящий",
+  "Солёный", "Кислотный", "Ночной", "Полярный", "Стальной", "Бешеный",
+  "Тёплый", "Холодный", "Голодный", "Жадный", "Ласковый", "Грозный",
+];
+const NOUN = [
+  "Закат", "Феникс", "Волк", "Бриз", "Шторм", "Гром",
+  "Лев", "Призрак", "Ястреб", "Вулкан", "Океан", "Пепел",
+  "Клинок", "Сокол", "Рассвет", "Каньон", "Титан", "Кедр",
+  "Шёпот", "Рокот", "Обсидиан", "Базальт", "Туман", "Блюз",
+  "Джаз", "Виски", "Графит", "Малахит", "Оникс", "Агат",
+  "Ветер", "Асфальт", "Бархан", "Коралл", "Мох", "Опал",
+  "Кофе", "Имбирь", "Мёд", "Сапфир", "Руби", "Дождь",
 ];
 
+function hslToHex(h: number, s: number, l: number): string {
+  h = ((h % 360) + 360) % 360;
+  s = Math.max(0, Math.min(100, s));
+  l = Math.max(0, Math.min(100, l));
+  const s1 = s / 100, l1 = l / 100;
+  const a = s1 * Math.min(l1, 1 - l1);
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const color = l1 - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color).toString(16).padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
+}
+
 export function genR() {
-  const q = PALS[Math.floor(Math.random() * PALS.length)];
   const r = () => Math.random();
+
+  // Generate base hue and derive harmonious palette
+  const hue = Math.floor(r() * 360);
+  const sat = 30 + Math.floor(r() * 45);  // 30-75%
+  const litP = 25 + Math.floor(r() * 30); // 25-55% primary lightness
+
+  const primary = hslToHex(hue, sat, litP);
+  const secondary = hslToHex(hue + 15, sat * 0.4, 12 + Math.floor(r() * 8));
+  const base = hslToHex(hue, 5, 10);
+  const detail = hslToHex(hue + (r() > 0.5 ? 30 : -30), sat * 0.8, litP + 25);
+  const piping = r() > 0.5 ? hslToHex(hue + 180, sat * 0.6, litP) : base;
+
   const c = { ...DEF };
+  const style = r();
 
-  // HARMONIOUS STYLES LOGIC (3 Main Architectures)
-  const styleRandomizer = r();
-
-  if (styleRandomizer > 0.6) {
-    // 1. DUAL TONE (Primary centers, Dark bolsters, Primary trims)
-    c.sb_d = q.P; c.sb_p = q.P;
-    c.sv_d = q.S; c.sv_p = q.S;
-    c.hr_d = q.P; c.hr_p = q.P;
-    c.du_l = q.S; c.du_r = q.S;
-    c.da_l = q.P; c.da_r = q.P;
-    c.di_l = q.P; c.di_r = q.P;
-    c.dl_l = q.S; c.dl_r = q.S;
-    c.dh_l = q.S; c.dh_r = q.S;
-    c.sw_s = q.P;
-    c.sbo = q.P; c.hbo = q.P;
-    c.arm = q.P;
-    c.con = q.B; c.dt = q.B; c.db = q.P; // lower dash same as primary
-  } else if (styleRandomizer > 0.3) {
-    // 2. FULL PRIMARY (Almost full interior wrapped in Primary)
-    c.sb_d = q.P; c.sb_p = q.P;
-    c.sv_d = q.P; c.sv_p = q.P;
-    c.hr_d = q.P; c.hr_p = q.P;
-    c.du_l = q.B; c.du_r = q.B;
-    c.da_l = q.P; c.da_r = q.P;
-    c.di_l = q.P; c.di_r = q.P;
-    c.dl_l = q.P; c.dl_r = q.P;
-    c.dh_l = q.B; c.dh_r = q.B;
-    c.sw_s = q.P;
-    c.sbo = q.P; c.hbo = q.P; c.arm = q.P;
-    c.con = q.P; c.dt = q.B; c.db = q.P;
+  if (style > 0.6) {
+    // DUAL TONE
+    c.sb_d = primary; c.sb_p = primary;
+    c.sv_d = secondary; c.sv_p = secondary;
+    c.hr_d = primary; c.hr_p = primary;
+    c.du_l = secondary; c.du_r = secondary;
+    c.da_l = primary; c.da_r = primary;
+    c.di_l = primary; c.di_r = primary;
+    c.dl_l = secondary; c.dl_r = secondary;
+    c.dh_l = secondary; c.dh_r = secondary;
+    c.sw_s = primary;
+    c.sbo = primary; c.hbo = primary;
+    c.arm = primary;
+    c.con = base; c.dt = base; c.db = primary;
+  } else if (style > 0.3) {
+    // FULL WRAP
+    c.sb_d = primary; c.sb_p = primary;
+    c.sv_d = primary; c.sv_p = primary;
+    c.hr_d = primary; c.hr_p = primary;
+    c.du_l = base; c.du_r = base;
+    c.da_l = primary; c.da_r = primary;
+    c.di_l = primary; c.di_r = primary;
+    c.dl_l = primary; c.dl_r = primary;
+    c.dh_l = base; c.dh_r = base;
+    c.sw_s = primary;
+    c.sbo = primary; c.hbo = primary; c.arm = primary;
+    c.con = primary; c.dt = base; c.db = primary;
   } else {
-    // 3. SUBTLE GENTLEMAN (Mostly dark, accents are Primary)
-    c.sb_d = q.P; c.sb_p = q.P;
-    c.sv_d = q.B; c.sv_p = q.B;
-    c.hr_d = q.B; c.hr_p = q.B;
-    c.da_l = q.P; c.da_r = q.P;
-    c.di_l = q.B; c.di_r = q.B;
-    // rest stays dark
+    // SUBTLE ACCENTS
+    c.sb_d = primary; c.sb_p = primary;
+    c.sv_d = base; c.sv_p = base;
+    c.hr_d = base; c.hr_p = base;
+    c.da_l = primary; c.da_r = primary;
+    c.di_l = base; c.di_r = base;
   }
 
-  // ACCENTS AND STITCHING ALWAYS HARMONIOUS
-  c.st = q.D;
-  c.pp = r() > 0.5 ? q.Pi : q.B;
-  c.sk = q.B; c.hh = q.B; // Knobs usually black/metal
+  c.st = detail;
+  c.pp = r() > 0.5 ? piping : base;
+  c.sk = base; c.hh = base;
 
-  // Random Trim selection
+  // Random trim
   const trimOptions = TRIMS.filter(t => t.id !== "custom").map(t => t.id);
-  const randomTrim = trimOptions[Math.floor(Math.random() * trimOptions.length)];
+  const trim = trimOptions[Math.floor(r() * trimOptions.length)];
 
-  return { colors: c, tag: q.T, trim: randomTrim };
+  // Funny name
+  const adj = ADJ[Math.floor(r() * ADJ.length)];
+  const noun = NOUN[Math.floor(r() * NOUN.length)];
+  const tag = `${adj} ${noun}`;
+
+  return { colors: c, tag, trim };
 }
+
