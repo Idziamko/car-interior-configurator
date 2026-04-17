@@ -26,13 +26,7 @@ function App() {
   const [cameraAngle, setCameraAngle] = useState<string>('driver_door');
 
   // Layout toggle
-  const [layoutMode, setLayoutMode] = useState<'vertical' | 'horizontal'>(() => {
-    return (localStorage.getItem('layout_mode') as 'vertical' | 'horizontal') || 'vertical';
-  });
-
-  useEffect(() => {
-    localStorage.setItem('layout_mode', layoutMode);
-  }, [layoutMode]);
+  const [isLandscape, setIsLandscape] = useState(false);
 
   const handleSelectSwatchGlobal = (hex: string) => {
     if (activeZone) {
@@ -50,6 +44,33 @@ function App() {
     setTrimId(r.trim);
     setRandomTag(r.tag);
   };
+
+  // Toggle landscape mode
+  const toggleLandscape = () => {
+    const next = !isLandscape;
+    setIsLandscape(next);
+
+    // Try to lock screen orientation on mobile
+    try {
+      const sl = screen.orientation as any;
+      if (next) {
+        sl?.lock?.('landscape').catch(() => {});
+      } else {
+        sl?.unlock?.();
+      }
+    } catch (_) { /* not supported */ }
+  };
+
+  // Listen for orientation changes to sync state
+  useEffect(() => {
+    const handler = () => {
+      if (screen.orientation?.type?.includes('portrait')) {
+        setIsLandscape(false);
+      }
+    };
+    screen.orientation?.addEventListener?.('change', handler);
+    return () => screen.orientation?.removeEventListener?.('change', handler);
+  }, []);
 
   // Build car description for prompt
   const getCarDesc = () => {
@@ -100,11 +121,21 @@ function App() {
     ? `${carMake}${carModel ? ' ' + carModel.split(' (')[0] : ''}`
     : 'КОНФИГУРАТОР';
 
-  const isHorizontal = layoutMode === 'horizontal';
+  // Car subtitle
+  const carSubtitle = (() => {
+    const selectedMake = CAR_DATABASE.find(m => m.name === carMake);
+    const selectedModelObj = selectedMake?.models.find(m => `${m.name} (${m.body})` === carModel);
+    if (!carMake) return null;
+    let parts = [carMake];
+    if (selectedModelObj) parts.push(`${selectedModelObj.name} ${selectedModelObj.body}`);
+    if (carYear) parts.push(carYear);
+    if (selectedModelObj) parts.push(selectedModelObj.type);
+    return parts.join(' · ');
+  })();
 
   return (
-    <div className="app-container">
-      {/* HEADER */}
+    <div className={`app-container ${isLandscape ? 'landscape-mode' : ''}`}>
+      {/* HEADER — compact */}
       <header className="app-header">
         <div className="header-top">
           <div>
@@ -114,66 +145,64 @@ function App() {
           <div className="header-actions">
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <button onClick={doRandom} className="random-btn">
-                🎲 Случайная комбинация
+                🎲 Случайная
               </button>
-              <button
-                onClick={() => setLayoutMode(m => m === 'vertical' ? 'horizontal' : 'vertical')}
-                className="layout-toggle-btn"
-                title={isHorizontal ? 'Вертикальный вид' : 'Горизонтальный вид'}
-              >
-                {isHorizontal ? '📱' : '📐'} {isHorizontal ? 'Верт.' : 'Гориз.'}
+              <button onClick={toggleLandscape} className="layout-toggle-btn">
+                {isLandscape ? '📱 Верт.' : '📐 Гориз.'}
               </button>
             </div>
-            {randomTag && <p style={{ fontSize: '0.8rem', color: 'var(--text-dark)' }}>Палитра: <span style={{ color: 'var(--text-muted)' }}>«{randomTag}»</span></p>}
+            {randomTag && <p style={{ fontSize: '0.78rem', color: 'var(--text-dark)' }}>«<span style={{ color: 'var(--text-muted)' }}>{randomTag}</span>»</p>}
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
+        {/* Preset buttons */}
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {PR.map((p, i) => (
-            <button key={i} onClick={() => { setColors(p.colors); setTrimId(p.trim); setRandomTag(null); }} style={{
-              padding: '8px 14px',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border)',
-              backgroundColor: 'var(--card)',
-              color: 'var(--text-muted)',
-              fontSize: '0.8rem',
-              transition: 'all 0.15s'
-            }}>
+            <button key={i} onClick={() => { setColors(p.colors); setTrimId(p.trim); setRandomTag(null); }} className="preset-btn">
               {p.name}
             </button>
           ))}
         </div>
       </header>
 
-      {/* CAR SELECTOR + CAMERA ANGLE */}
-      <section style={{ padding: '16px var(--pad-x) 0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <CarSelector
-          make={carMake} setMake={setCarMake}
-          model={carModel} setModel={setCarModel}
-          year={carYear} setYear={setCarYear}
-          extColor={extColor} setExtColor={setExtColor}
-        />
-        <CameraAngleSelector selected={cameraAngle} onSelect={setCameraAngle} />
-      </section>
-
-      {/* SKIN SAMPLES */}
-      <section className="skin-section">
-        <SkinSamples activeZone={activeZone} onSelectCallback={handleSelectSwatchGlobal} />
-      </section>
-
-      {/* MAIN CONTENT */}
-      <main className={`main-content ${isHorizontal ? 'layout-horizontal' : 'layout-vertical'}`}>
+      {/* ====== MAIN LAYOUT ====== */}
+      <main className="main-content">
+        {/* LEFT: SVG + quick bar (always first, sticky) */}
         <div className="left-column">
-          {/* SVG Visualizer */}
-          <div className="svg-wrapper sticky-svg">
+          <div className="svg-wrapper">
             <CarInteriorSVG colors={colors} activeZone={activeZone} onZoneClick={setActiveZone} trimId={trimId} trimColor={trimColor} />
           </div>
-          {/* Quick Color Bar — right under SVG */}
+          {/* Car model label under SVG */}
+          {carSubtitle && (
+            <div style={{
+              textAlign: 'center', padding: '6px 12px',
+              fontSize: '0.72rem', letterSpacing: '1.5px',
+              color: 'var(--text-dark)', fontWeight: 600,
+            }}>
+              {carSubtitle}
+            </div>
+          )}
+          {/* Quick Color Bar */}
           <QuickColorBar activeZone={activeZone} colors={colors} onColorChange={handleQuickColor} />
         </div>
 
-        <div className="right-column" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Accordions */}
+        {/* RIGHT: all settings */}
+        <div className="right-column">
+          {/* Car Selector */}
+          <CarSelector
+            make={carMake} setMake={setCarMake}
+            model={carModel} setModel={setCarModel}
+            year={carYear} setYear={setCarYear}
+            extColor={extColor} setExtColor={setExtColor}
+          />
+
+          {/* Camera Angle */}
+          <CameraAngleSelector selected={cameraAngle} onSelect={setCameraAngle} />
+
+          {/* Skin Samples */}
+          <SkinSamples activeZone={activeZone} onSelectCallback={handleSelectSwatchGlobal} />
+
+          {/* Detail Accordions */}
           <RightPanel colors={colors} setColors={setColors} activeZone={activeZone} setActiveZone={setActiveZone} trimId={trimId} setTrimId={setTrimId} trimColor={trimColor} setTrimColor={setTrimColor} />
 
           {/* Palette Grid */}
@@ -198,13 +227,11 @@ function App() {
               {AZ.length} зон · {[...new Set(AZ.map(z => (colors[z.id] || '#1A1A1A').toUpperCase()))].length} уникальных цветов
             </p>
           </div>
+
+          {/* AI Prompt */}
+          <AIPrompt promptText={getPromptText()} />
         </div>
       </main>
-
-      {/* AI Prompt */}
-      <section className="prompt-section">
-        <AIPrompt promptText={getPromptText()} />
-      </section>
     </div>
   );
 }
