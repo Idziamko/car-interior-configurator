@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PR, AZ, genR, TRIMS } from './data';
+import { PR, AZ, genR } from './data';
 import { CAMERA_ANGLES, CAR_DATABASE } from './carDatabase';
 import { SkinSamples } from './components/SkinSamples';
 import { RightPanel } from './components/RightPanel';
@@ -16,7 +16,7 @@ function App() {
   const [trimColor, setTrimColor] = useState<string>('#8B5A2B');
   const [randomTag, setRandomTag] = useState<string | null>(null);
 
-  // Car selector state
+  // Car selector
   const [carMake, setCarMake] = useState<string>('BMW');
   const [carModel, setCarModel] = useState<string>('Z4 (E85)');
   const [carYear, setCarYear] = useState<string>('2006');
@@ -25,8 +25,17 @@ function App() {
   // Camera angle
   const [cameraAngle, setCameraAngle] = useState<string>('driver_door');
 
-  // Layout toggle
-  const [isLandscape, setIsLandscape] = useState(false);
+  // Layout: false = vertical (mobile default), true = horizontal (50/50)
+  const [isHorizontal, setIsHorizontal] = useState(false);
+
+  // Persist layout
+  useEffect(() => {
+    const saved = localStorage.getItem('layout_h');
+    if (saved === '1') setIsHorizontal(true);
+  }, []);
+  useEffect(() => {
+    localStorage.setItem('layout_h', isHorizontal ? '1' : '0');
+  }, [isHorizontal]);
 
   const handleSelectSwatchGlobal = (hex: string) => {
     if (activeZone) {
@@ -45,97 +54,67 @@ function App() {
     setRandomTag(r.tag);
   };
 
-  // Toggle landscape mode
-  const toggleLandscape = () => {
-    const next = !isLandscape;
-    setIsLandscape(next);
-
-    // Try to lock screen orientation on mobile
-    try {
-      const sl = screen.orientation as any;
-      if (next) {
-        sl?.lock?.('landscape').catch(() => {});
-      } else {
-        sl?.unlock?.();
-      }
-    } catch (_) { /* not supported */ }
-  };
-
-  // Listen for orientation changes to sync state
-  useEffect(() => {
-    const handler = () => {
-      if (screen.orientation?.type?.includes('portrait')) {
-        setIsLandscape(false);
-      }
-    };
-    screen.orientation?.addEventListener?.('change', handler);
-    return () => screen.orientation?.removeEventListener?.('change', handler);
-  }, []);
-
-  // Build car description for prompt
+  // ===== CAR DESCRIPTION FOR PROMPT =====
   const getCarDesc = () => {
     const selectedMake = CAR_DATABASE.find(m => m.name === carMake);
     const selectedModelObj = selectedMake?.models.find(m => `${m.name} (${m.body})` === carModel);
-
     if (!carMake) return 'car';
-
     let desc = '';
     if (extColor) desc += `${extColor} `;
     if (carYear) desc += `${carYear} `;
     desc += carMake;
-    if (selectedModelObj) {
-      desc += ` ${selectedModelObj.name} ${selectedModelObj.body} ${selectedModelObj.type}`;
-    }
+    if (selectedModelObj) desc += ` ${selectedModelObj.name} ${selectedModelObj.body} ${selectedModelObj.type}`;
     return desc.trim();
   };
 
-  // Build camera angle prompt
+  // ===== CAMERA PROMPT =====
   const getCameraPrompt = () => {
-    const angle = CAMERA_ANGLES.find(a => a.id === cameraAngle);
-    return angle?.prompt || CAMERA_ANGLES[0].prompt;
+    return CAMERA_ANGLES.find(a => a.id === cameraAngle)?.prompt || CAMERA_ANGLES[0].prompt;
   };
 
+  // ===== FULL PROMPT — every detail included =====
   const getPromptText = () => {
     const h = (id: string) => (colors[id] || "#1A1A1A").toUpperCase();
-    const trimN = (TRIMS.find(t => t.id === trimId) || TRIMS[0]).n;
+
+    const trimEn = trimId === 'carbon' ? 'carbon fiber' : trimId === 'wood_m' ? 'matte dark wood' : trimId === 'wood_c' ? 'walnut wood' : trimId === 'leather' ? 'leather-wrapped' : `custom color ${trimColor}`;
     const u = [...new Set(AZ.map(z => h(z.id)))].length;
     const carDesc = getCarDesc();
-    const cameraPrompt = getCameraPrompt();
+    const camPrompt = getCameraPrompt();
 
     return [
       `Photorealistic interior of ${carDesc}, custom leather upholstery.`,
-      `${cameraPrompt}. ${u} colors, premium leather & alcantara.`,
-      `SEATS — Driver base: ${h("sb_d")}, bolsters: ${h("sv_d")}, headrest: ${h("hr_d")}. Passenger base: ${h("sb_p")}, bolsters: ${h("sv_p")}, headrest: ${h("hr_p")}. Quilted centers.`,
-      `DOORS — L upper: ${h("du_l")}, accent: ${h("da_l")}, main: ${h("di_l")}, kick: ${h("dl_l")}, handle: ${h("dh_l")}. R upper: ${h("du_r")}, accent: ${h("da_r")}, main: ${h("di_r")}, kick: ${h("dl_r")}, handle: ${h("dh_r")}.`,
-      `STEERING — Top: ${h("sw_t")}, sides: ${h("sw_s")}, bottom: ${h("sw_b")}, spokes: ${h("sw_sp")}, center/airbag: ${h("sw_c")}. OEM 3-spoke.`,
-      `CONTROLS — Shift knob: ${h("sk")}, boot: ${h("sbo")}. Handbrake: ${h("hh")}, boot: ${h("hbo")}. Armrest: ${h("arm")}. Tunnel: ${h("con")}.`,
-      `DASHBOARD — Upper: ${h("dt")}, lower: ${h("db")}. Trim: ${trimN}. OEM.`,
-      `FLOOR — Mats: ${h("mat_d")}, ${h("mat_p")}. Footwells: ${h("fw_d")}, ${h("fw_p")}.`,
-      `ACCENTS — Stitching: ${h("st")}. Piping: ${h("pp")}.`,
-      `Studio lighting, 8K, detailed leather texture. All OEM controls visible.`
+      `${camPrompt}. ${u} distinct colors used, premium leather & alcantara materials.`,
+      `SEATS — Driver: base ${h("sb_d")}, bolsters ${h("sv_d")}, headrest ${h("hr_d")}. Passenger: base ${h("sb_p")}, bolsters ${h("sv_p")}, headrest ${h("hr_p")}. Quilted diamond-stitched centers.`,
+      `DOORS — Left: upper panel ${h("du_l")}, accent strip ${h("da_l")}, main insert ${h("di_l")}, kick panel ${h("dl_l")}, handle ${h("dh_l")}. Right: upper panel ${h("du_r")}, accent strip ${h("da_r")}, main insert ${h("di_r")}, kick panel ${h("dl_r")}, handle ${h("dh_r")}.`,
+      `STEERING WHEEL — Top rim ${h("sw_t")}, side grips ${h("sw_s")}, bottom rim ${h("sw_b")}, spokes ${h("sw_sp")}, center airbag pad ${h("sw_c")}. OEM 3-spoke design.`,
+      `CENTER CONSOLE — Shift knob ${h("sk")}, shift boot ${h("sbo")}, handbrake handle ${h("hh")}, handbrake boot ${h("hbo")}, armrest lid ${h("arm")}, tunnel cover ${h("con")}.`,
+      `DASHBOARD — Upper dashboard ${h("dt")}, lower dashboard ${h("db")}. Trim inlays: ${trimEn}.`,
+      `FLOOR — Driver mat ${h("mat_d")}, passenger mat ${h("mat_p")}. Driver footwell ${h("fw_d")}, passenger footwell ${h("fw_p")}.`,
+      `ACCENTS — Contrast stitching thread ${h("st")}. Piping/welting ${h("pp")}.`,
+      `Studio lighting, 8K resolution, hyper-detailed leather grain texture, all factory controls and gauges visible.`
     ].join("\n\n");
   };
 
-  // Dynamic header title
+  // ===== HEADER TITLE =====
   const headerTitle = carMake
     ? `${carMake}${carModel ? ' ' + carModel.split(' (')[0] : ''}`
     : 'КОНФИГУРАТОР';
 
-  // Car subtitle
   const carSubtitle = (() => {
-    const selectedMake = CAR_DATABASE.find(m => m.name === carMake);
-    const selectedModelObj = selectedMake?.models.find(m => `${m.name} (${m.body})` === carModel);
+    const mk = CAR_DATABASE.find(m => m.name === carMake);
+    const md = mk?.models.find(m => `${m.name} (${m.body})` === carModel);
     if (!carMake) return null;
-    let parts = [carMake];
-    if (selectedModelObj) parts.push(`${selectedModelObj.name} ${selectedModelObj.body}`);
+    const parts = [carMake];
+    if (md) parts.push(`${md.name} ${md.body}`);
     if (carYear) parts.push(carYear);
-    if (selectedModelObj) parts.push(selectedModelObj.type);
+    if (md) parts.push(md.type);
     return parts.join(' · ');
   })();
 
+  // ===== RENDER =====
   return (
-    <div className={`app-container ${isLandscape ? 'landscape-mode' : ''}`}>
-      {/* HEADER — compact */}
+    <div className="app-root">
+      {/* HEADER */}
       <header className="app-header">
         <div className="header-top">
           <div>
@@ -143,87 +122,59 @@ function App() {
             <p className="title-sub">ВИЗУАЛИЗАТОР ПЕРЕТЯЖКИ САЛОНА</p>
           </div>
           <div className="header-actions">
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <button onClick={doRandom} className="random-btn">
-                🎲 Случайная
-              </button>
-              <button onClick={toggleLandscape} className="layout-toggle-btn">
-                {isLandscape ? '📱 Верт.' : '📐 Гориз.'}
-              </button>
-            </div>
-            {randomTag && <p style={{ fontSize: '0.78rem', color: 'var(--text-dark)' }}>«<span style={{ color: 'var(--text-muted)' }}>{randomTag}</span>»</p>}
+            <button onClick={doRandom} className="random-btn">🎲 Случайная</button>
+            <button onClick={() => setIsHorizontal(h => !h)} className="toggle-btn">
+              {isHorizontal ? '📱 Вертикально' : '📐 Горизонтально'}
+            </button>
           </div>
         </div>
-
-        {/* Preset buttons */}
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        {randomTag && <p style={{ fontSize: '0.78rem', color: 'var(--text-dark)' }}>Палитра: «<span style={{ color: 'var(--text-muted)' }}>{randomTag}</span>»</p>}
+        <div className="presets-row">
           {PR.map((p, i) => (
-            <button key={i} onClick={() => { setColors(p.colors); setTrimId(p.trim); setRandomTag(null); }} className="preset-btn">
-              {p.name}
-            </button>
+            <button key={i} onClick={() => { setColors(p.colors); setTrimId(p.trim); setRandomTag(null); }} className="preset-btn">{p.name}</button>
           ))}
         </div>
       </header>
 
-      {/* ====== MAIN LAYOUT ====== */}
-      <main className="main-content">
-        {/* LEFT: SVG + quick bar (always first, sticky) */}
-        <div className="left-column">
+      {/* ===== MAIN ===== */}
+      <div className={`main-wrap ${isHorizontal ? 'hz' : 'vt'}`}>
+
+        {/* --- LEFT: always SVG + quick bar + subtitle --- */}
+        <div className="col-left">
           <div className="svg-wrapper">
             <CarInteriorSVG colors={colors} activeZone={activeZone} onZoneClick={setActiveZone} trimId={trimId} trimColor={trimColor} />
           </div>
-          {/* Car model label under SVG */}
           {carSubtitle && (
-            <div style={{
-              textAlign: 'center', padding: '6px 12px',
-              fontSize: '0.72rem', letterSpacing: '1.5px',
-              color: 'var(--text-dark)', fontWeight: 600,
-            }}>
-              {carSubtitle}
-            </div>
+            <div className="car-subtitle">{carSubtitle}</div>
           )}
-          {/* Quick Color Bar */}
           <QuickColorBar activeZone={activeZone} colors={colors} onColorChange={handleQuickColor} />
         </div>
 
-        {/* RIGHT: all settings */}
-        <div className="right-column">
-          {/* Car Selector */}
+        {/* --- RIGHT: all settings --- */}
+        <div className="col-right">
           <CarSelector
             make={carMake} setMake={setCarMake}
             model={carModel} setModel={setCarModel}
             year={carYear} setYear={setCarYear}
             extColor={extColor} setExtColor={setExtColor}
           />
-
-          {/* Camera Angle */}
           <CameraAngleSelector selected={cameraAngle} onSelect={setCameraAngle} />
-
-          {/* Skin Samples */}
           <SkinSamples activeZone={activeZone} onSelectCallback={handleSelectSwatchGlobal} />
-
-          {/* Detail Accordions */}
           <RightPanel colors={colors} setColors={setColors} activeZone={activeZone} setActiveZone={setActiveZone} trimId={trimId} setTrimId={setTrimId} trimColor={trimColor} setTrimColor={setTrimColor} />
 
-          {/* Palette Grid */}
-          <div className="panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {/* Mini palette */}
+          <div className="panel" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
               {AZ.map(z => (
-                <div
-                  key={z.id}
-                  title={z.l}
-                  onClick={() => setActiveZone(z.id)}
-                  style={{
-                    width: '24px', height: '24px', borderRadius: '5px',
-                    backgroundColor: colors[z.id] || '#1A1A1A',
-                    border: activeZone === z.id ? '2px solid white' : '1.5px solid #1a1a1c',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s'
-                  }}
-                />
+                <div key={z.id} title={z.l} onClick={() => setActiveZone(z.id)} style={{
+                  width: '22px', height: '22px', borderRadius: '5px',
+                  backgroundColor: colors[z.id] || '#1A1A1A',
+                  border: activeZone === z.id ? '2px solid white' : '1.5px solid #1a1a1c',
+                  cursor: 'pointer', transition: 'all 0.15s'
+                }} />
               ))}
             </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-dark)', marginTop: '8px' }}>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-dark)' }}>
               {AZ.length} зон · {[...new Set(AZ.map(z => (colors[z.id] || '#1A1A1A').toUpperCase()))].length} уникальных цветов
             </p>
           </div>
@@ -231,7 +182,7 @@ function App() {
           {/* AI Prompt */}
           <AIPrompt promptText={getPromptText()} />
         </div>
-      </main>
+      </div>
     </div>
   );
 }
