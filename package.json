@@ -7,12 +7,16 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "remotion:studio": "remotion studio",
+    "remotion:render": "remotion render GroundhogDayAi out/GroundhogDayAi.mp4"
   },
   "dependencies": {
+    "@remotion/cli": "^4.0.448",
     "lucide-react": "^0.577.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "remotion": "^4.0.448"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
