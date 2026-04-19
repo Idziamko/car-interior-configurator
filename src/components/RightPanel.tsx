@@ -20,11 +20,14 @@ export function RightPanel({ colors, setColors, activeZone, setActiveZone, trimI
     const [openPopover, setOpenPopover] = React.useState<string | null>(null);
 
     React.useEffect(() => {
-        if (activeZone) {
-            const group = ZG.find(g => g.zones.some(z => z.id === activeZone));
-            if (group) {
-                setOpenGroups(prev => ({ ...prev, [group.g]: true }));
-            }
+        if (!activeZone) return;
+        if (activeZone === 'trim') {
+            setOpenGroups(prev => ({ ...prev, TRIM: true }));
+            return;
+        }
+        const group = ZG.find(g => g.zones.some(z => z.id === activeZone));
+        if (group) {
+            setOpenGroups(prev => ({ ...prev, [group.g]: true }));
         }
     }, [activeZone]);
 
@@ -66,7 +69,7 @@ export function RightPanel({ colors, setColors, activeZone, setActiveZone, trimI
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {/* ============ TRIM ============ */}
-            <div className="panel" style={{ overflow: 'visible' }}>
+            <div id="zone-trim" className="panel" style={{ overflow: 'visible' }}>
                 <div onClick={() => toggleGroup('TRIM')} style={panelHeadStyle(openGroups['TRIM'])}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <span style={{ color: 'var(--ink-4)', fontSize: '14px', width: '16px', display: 'flex', justifyContent: 'center' }}>

@@ -123,13 +123,14 @@ export function CarInteriorSVG({ colors, activeZone, onZoneClick, trimId, trimCo
                 {/* Bottom Dash */}
                 <path d="M 50,350 Q 500,280 950,350 C 930,420 850,450 800,450 Q 500,420 200,450 C 150,450 70,420 50,350 Z" {...gProps("db")} />
 
-                {/* TRIM STRIP (wood / carbon / leather) — decorative strip embedded in dashboard panel */}
+                {/* TRIM STRIP (wood / carbon / leather) — clickable, scrolls to Декор торпедо */}
                 <path
                     d="M 140,345 Q 500,295 860,345 L 860,385 Q 500,335 140,385 Z"
                     fill={getTrimFill()}
-                    stroke="rgba(0,0,0,0.35)"
-                    strokeWidth={1}
-                    style={{ pointerEvents: 'none' }}
+                    stroke={activeZone === 'trim' ? 'rgba(47,179,122,0.9)' : 'rgba(0,0,0,0.35)'}
+                    strokeWidth={activeZone === 'trim' ? 2 : 1}
+                    onClick={(e) => { e.stopPropagation(); onZoneClick('trim'); }}
+                    style={{ cursor: 'pointer' }}
                 />
                 {/* Subtle highlight on trim strip top edge */}
                 <path
