@@ -442,13 +442,6 @@ input[type="range"]::-moz-range-thumb {
   .main-wrap.vt .svg-wrapper { min-height: 520px; }
 }
 
-@media (max-width: 1023px) {
-  body.layout-hz .main-wrap.hz .svg-wrapper svg {
-    transform: scale(1.35);
-    transform-origin: center center;
-  }
-}
-
 /* ============================================
    TABLET / MOBILE
    ============================================ */
@@ -466,6 +459,81 @@ input[type="range"]::-moz-range-thumb {
   .app-header { padding: 16px var(--pad-x) 14px; }
 
   .main-wrap.vt .svg-wrapper { min-height: 240px; }
-  .main-wrap.hz { gap: 10px; }
-  .main-wrap.hz .svg-wrapper { min-height: 200px; }
+}
+
+/* On mobile, horizontal toggle falls back to stacked layout so SVG has real space */
+@media (max-width: 767px) {
+  body.layout-hz { overflow: auto; }
+  body.layout-hz .app-root { height: auto; min-height: 100vh; min-height: 100dvh; }
+  .main-wrap.hz {
+    flex-direction: column;
+    overflow: visible;
+    gap: 12px;
+  }
+  .main-wrap.hz .col-left,
+  .main-wrap.hz .col-right {
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+  .main-wrap.hz .svg-wrapper {
+    min-height: 260px;
+    aspect-ratio: 5 / 4;
+  }
+  .main-wrap.hz .svg-wrapper svg { transform: none; }
+}
+
+/* Tablet-only: keep 50/50 horizontal split but bump SVG scale for readability */
+@media (min-width: 768px) and (max-width: 1023px) {
+  body.layout-hz .main-wrap.hz .svg-wrapper svg {
+    transform: scale(1.25);
+    transform-origin: center center;
+  }
+}
+
+/* ============================================
+   TOUCH / POINTER — disable sticky :hover on touch devices
+   ============================================ */
+@media (hover: none) {
+  .btn:hover,
+  .btn-primary:hover,
+  .btn-ghost:hover,
+  .random-btn:hover,
+  .toggle-btn:hover,
+  .chip:hover,
+  .preset-btn:hover,
+  select:hover {
+    transform: none;
+    filter: none;
+    background: inherit;
+    border-color: inherit;
+    color: inherit;
+  }
+  .btn-primary:hover,
+  .random-btn:hover {
+    background: linear-gradient(180deg, #FF7A3D, #EE5818);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: #1A0A00;
+  }
+  .chip:hover,
+  .preset-btn:hover {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--ink-2);
+  }
+  .btn-ghost:hover {
+    background: transparent;
+    border-color: var(--line);
+    color: var(--ink-2);
+  }
+  .btn:active,
+  .btn-primary:active,
+  .btn-ghost:active,
+  .random-btn:active,
+  .toggle-btn:active,
+  .chip:active,
+  .preset-btn:active {
+    filter: brightness(0.92);
+    transform: translateY(0);
+    transition: filter .05s var(--ease);
+  }
 }

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { PR, AZ, genR } from './data';
 import { CAMERA_ANGLES, CAR_DATABASE, ALCANTARA_ZONES, STITCH_PATTERNS } from './carDatabase';
-import { SkinSamples } from './components/SkinSamples';
 import { RightPanel } from './components/RightPanel';
 import { CarInteriorSVG } from './components/CarInteriorSVG';
 import { AIPrompt } from './components/AIPrompt';
@@ -45,12 +44,6 @@ function App() {
     document.body.classList.toggle('layout-hz', isHorizontal);
     return () => { document.body.classList.remove('layout-hz'); };
   }, [isHorizontal]);
-
-  const handleSelectSwatchGlobal = (hex: string) => {
-    if (activeZone) {
-      setColors(prev => ({ ...prev, [activeZone]: hex }));
-    }
-  };
 
   const handleQuickColor = (zoneId: string, hex: string) => {
     setColors(prev => ({ ...prev, [zoneId]: hex }));
@@ -212,7 +205,6 @@ function App() {
             {isHorizontal && (
               <QuickColorBar activeZone={activeZone} colors={colors} onColorChange={handleQuickColor} />
             )}
-            <SkinSamples activeZone={activeZone} onSelectCallback={handleSelectSwatchGlobal} />
             <CarSelector
               make={carMake} setMake={setCarMake}
               model={carModel} setModel={setCarModel}
