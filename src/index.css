@@ -516,8 +516,9 @@ input[type="range"]::-moz-range-thumb {
   .main-wrap.vt .svg-wrapper { min-height: 240px; }
 }
 
-/* On mobile, horizontal toggle falls back to stacked layout so SVG has real space */
-@media (max-width: 767px) {
+/* Narrow PORTRAIT only (phone held upright): horizontal toggle falls back to stacked
+   layout so SVG has real width. Landscape phones always keep the 50/50 split. */
+@media (max-width: 767px) and (orientation: portrait) {
   body.layout-hz { overflow: auto; }
   body.layout-hz .app-root { height: auto; min-height: 100vh; min-height: 100dvh; }
   .main-wrap.hz {
