@@ -116,8 +116,11 @@ export function AIPrompt({ promptText }: AIPromptProps) {
                 color: 'var(--ink-4)',
                 fontFamily: 'var(--font-mono)',
                 letterSpacing: '0.04em',
+                lineHeight: 1.55,
             }}>
-                Вставь в Midjourney / DALL·E / Stable Diffusion для фотореалистичной визуализации.
+                Промпт оптимизирован под <span style={{ color: 'var(--accent-2)' }}>Nano Banana 2 / Pro</span>.
+                Вставь в Google Gemini (gemini.google.com) или любой другой сервис с доступом к Nano Banana —
+                модель даст максимально фотореалистичный результат по интерьеру и материалам.
             </p>
         </div>
     );

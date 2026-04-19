@@ -490,6 +490,43 @@ input[type="range"]::-moz-range-thumb {
   }
 }
 
+/* Landscape phone in horizontal mode — collapse header into one row so SVG has vertical room */
+@media (orientation: landscape) and (max-height: 500px) {
+  body.layout-hz .app-header {
+    padding: 6px var(--pad-x);
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+  }
+  body.layout-hz .app-header > div:first-child { flex: 1; min-width: 0; }
+  body.layout-hz .header-top {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+  }
+  body.layout-hz .title-main { font-size: 18px; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  body.layout-hz .title-sub { display: none; }
+  body.layout-hz .presets-row { display: none; }
+  body.layout-hz .header-actions { flex-wrap: nowrap; }
+  body.layout-hz .header-actions .btn,
+  body.layout-hz .header-actions .btn-primary,
+  body.layout-hz .header-actions .random-btn { padding: 7px 12px; min-height: 34px; font-size: 12px; }
+  body.layout-hz .seg button { padding: 6px 10px; min-height: 28px; font-size: 12px; }
+  body.layout-hz .main-wrap.hz { padding: 8px var(--pad-x); }
+  body.layout-hz .main-wrap.hz .car-subtitle { display: none; }
+  body.layout-hz .main-wrap.hz .svg-wrapper svg {
+    transform: scale(1.4);
+    transform-origin: center center;
+  }
+}
+
+/* Desktop: always horizontal — hide the layout toggle */
+@media (min-width: 1024px) {
+  .seg { display: none; }
+}
+
 /* ============================================
    TOUCH / POINTER — disable sticky :hover on touch devices
    ============================================ */

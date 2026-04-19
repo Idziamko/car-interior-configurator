@@ -33,11 +33,12 @@ function App() {
   // Layout: false = vertical (mobile default), true = horizontal (50/50)
   const [isHorizontal, setIsHorizontal] = useState(false);
 
-  // Persist layout (default horizontal on desktop)
+  // Desktop is always horizontal; mobile persists user choice
   useEffect(() => {
+    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+    if (isDesktop) { setIsHorizontal(true); return; }
     const saved = localStorage.getItem('layout_h');
     if (saved === '1') setIsHorizontal(true);
-    else if (saved === null && typeof window !== 'undefined' && window.innerWidth >= 1024) setIsHorizontal(true);
   }, []);
   useEffect(() => {
     localStorage.setItem('layout_h', isHorizontal ? '1' : '0');
