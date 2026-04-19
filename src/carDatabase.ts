@@ -912,43 +912,145 @@ export interface CameraAngle {
   nameRu: string;
   icon: string;
   prompt: string;
+  requires4Door?: boolean;
 }
 
 export const CAMERA_ANGLES: CameraAngle[] = [
   {
     id: "driver_door",
-    nameRu: "С двери водителя",
+    nameRu: "От двери водителя",
     icon: "🚪",
-    prompt: "Camera: from open driver's door, 3/4 overhead angle, full cabin visible, door fully open"
+    prompt: "Camera positioned outside the car at the open driver's door, 3/4 overhead angle looking inward into the cabin. Driver's door fully open at about 70 degrees — the door card interior (upper trim, armrest, speaker grille, door handle pull, kick panel) is prominently visible in the foreground. Behind the door: full driver's seat with visible base, bolsters and headrest, the steering wheel centered in the cabin, full dashboard and instrument cluster, center console with shift knob, pedal box at the floor, door sill scuff plate. No occupants, keys out of the ignition, seat belt retracted. Natural daylight from the open door, sharp focus on upholstery stitching, leather grain and material textures."
   },
   {
     id: "bird_eye",
-    nameRu: "Вид сверху",
+    nameRu: "Вид сверху (сквозь крышу)",
     icon: "🔭",
-    prompt: "Camera: top-down bird's eye view, roof removed, entire cabin visible from directly above"
+    prompt: "Orthographic top-down bird's-eye view with the roof and headliner digitally removed (cutaway). Entire cabin visible from directly above as a floor plan: both front seats showing the full top surfaces — seat bases, bolsters, headrests and the quilting pattern clearly readable from above; rear bench visible if the car has one; center console with shift knob, cupholders, armrest lid, storage; full dashboard top surface including instrument cluster and infotainment screen; steering wheel seen from directly above showing spokes and center pad; door cards on both sides with armrests and speakers; carpet / floor mats in all footwells; pedals visible in the driver footwell. Symmetric composition, even diffuse studio lighting, no hard shadows."
   },
   {
     id: "driver_pov",
-    nameRu: "Глазами водителя",
+    nameRu: "От первого лица (водитель)",
     icon: "🧑‍✈️",
-    prompt: "Camera: from driver's seat POV, hands-on-wheel perspective, looking at dashboard, steering wheel and center console"
+    prompt: "First-person POV from the driver's seat — NO hands, NO arms, NO body parts, NO driver visible, as if an invisible driver. Eye-level view looking straight ahead. Composition: steering wheel occupies the lower third of the frame (spokes, rim, center airbag badge clearly visible); full instrument cluster visible through the top of the wheel; upper dashboard with air vents across the middle; infotainment screen to the right; windshield fills the upper half showing an empty, soft, out-of-focus environment (no road, no cars, no people); side window on the left with A-pillar trim; rearview mirror at the top center; center console and gear shifter to the right of the wheel; door card partially visible on the left. Realistic shallow depth of field — dashboard and wheel in sharp focus, outside world blurred."
   },
   {
     id: "passenger_door",
-    nameRu: "Со стороны пассажира",
+    nameRu: "От двери пассажира",
     icon: "🚶",
-    prompt: "Camera: from open passenger door, 3/4 view looking across to driver's side, full interior visible"
+    prompt: "Camera positioned outside at the open front passenger door, 3/4 angle looking across the cabin toward the driver's side. Passenger door fully open — door card interior (upper panel, armrest, speaker, handle, kick panel) prominent in the foreground. Passenger seat in full view. Across the cabin: full dashboard spanning the frame (glovebox on the passenger side visible in front), center console between the seats with shift knob and tunnel, driver's seat on the far side. The steering wheel is on the FAR side of the cabin (left-hand-drive assumption) — partially visible in the distance, NOT centered in the frame. Passenger footwell with carpet/mat visible. Focus on passenger-side upholstery, door trim, glovebox handle and dashboard stitching."
   },
   {
     id: "rear_seat",
-    nameRu: "С заднего ряда",
+    nameRu: "С задних сидений вперёд",
     icon: "🔙",
-    prompt: "Camera: from rear seat perspective, looking forward at front seats headrests, dashboard and center console"
+    prompt: "Camera positioned on the rear bench at head height, centered, looking forward toward the front of the cabin. Visible: backs of both front seat headrests dominating the middle of the frame, backs of both front seats with map pockets / rear entertainment screens if present, B-pillar trim with seatbelts on both sides, headliner and sun visors above, rear of the center console / tunnel with rear air vents and USB ports between the seats, dashboard top and infotainment visible between and above the headrests, windshield in the distance showing a blurred empty environment. Rear door cards visible at the edges of the frame with their armrests and speakers.",
+    requires4Door: true
+  },
+  {
+    id: "front_to_rear",
+    nameRu: "На задние сидения",
+    icon: "↩️",
+    prompt: "Camera positioned between the two front seats at head height, facing backward toward the rear of the cabin. Full rear bench visible filling the frame: rear seat base, bolsters, all headrests, quilting/stitching pattern clearly readable on rear seat centers. Rear door cards on both sides with armrests, handles and speakers. Rear footwell with carpet and floor mats. B-pillars with rear seatbelts. Rear window / parcel shelf in the background, headliner above. Center rear armrest visible between the two rear seats (folded up flush or folded down with cupholders). Sharp focus on rear seat upholstery, stitching, and the door card inserts.",
+    requires4Door: true
   },
   {
     id: "wide_front",
     nameRu: "Панорама спереди",
     icon: "📐",
-    prompt: "Camera: wide-angle from front windshield looking in, both seats and full dashboard visible, symmetric composition"
+    prompt: "Wide-angle view from just inside the front windshield looking backward into the cabin. Symmetric composition centered on the cabin axis: both front seats visible with full backrests, bolsters and headrests; full curvature of the dashboard across the bottom of the frame; both door cards on the sides with armrests and speakers; center console and tunnel between the seats with shift knob, cupholders and armrest; steering wheel centered in the lower third; full instrument cluster visible. Shallow depth of field with the front seats in critical focus, rear cabin softly blurred."
   },
 ];
+
+// ========== ALCANTARA ZONES (multi-select) ==========
+export interface AlcantaraZone {
+  id: string;
+  nameRu: string;
+  promptText: string;
+}
+
+export const ALCANTARA_ZONES: AlcantaraZone[] = [
+  { id: "roof", nameRu: "Потолок", promptText: "the entire headliner / roof lining" },
+  { id: "pillars", nameRu: "Стойки (A/B/C)", promptText: "A-pillars, B-pillars and C-pillars trim" },
+  { id: "sunvisors", nameRu: "Козырьки", promptText: "sun visors" },
+  { id: "door_upper", nameRu: "Верх карт дверей", promptText: "upper door panels (above the armrest)" },
+  { id: "door_inserts", nameRu: "Вставки в дверях", promptText: "main door card inserts (the large central panel of each door)" },
+  { id: "dash_top", nameRu: "Верх торпедо", promptText: "the upper dashboard surface (top pad)" },
+  { id: "dash_full", nameRu: "Вся панель (торпедо)", promptText: "the entire dashboard — upper and lower sections" },
+  { id: "steering", nameRu: "Руль (хваты)", promptText: "steering wheel grips at the 3 and 9 o'clock positions" },
+  { id: "seat_centers", nameRu: "Центры сидений", promptText: "seat center panels (front seats, and rear seats if present)" },
+  { id: "seat_bolsters", nameRu: "Боковые валики сидений", promptText: "seat side bolsters" },
+  { id: "console", nameRu: "Центральный тоннель", promptText: "center console / tunnel side panels" },
+  { id: "armrest", nameRu: "Подлокотник", promptText: "center armrest lid" },
+  { id: "shift_boot", nameRu: "Чехол КПП", promptText: "shift boot / gear selector gaiter" },
+];
+
+// ========== STITCH / QUILTING PATTERNS (single-select) ==========
+export interface StitchPattern {
+  id: string;
+  nameRu: string;
+  promptText: string;
+}
+
+export const STITCH_PATTERNS: StitchPattern[] = [
+  {
+    id: "none",
+    nameRu: "Без рисунка",
+    promptText: "flat smooth seat centers with no quilting pattern, only clean perimeter contrast stitching around each panel edge"
+  },
+  {
+    id: "diamond",
+    nameRu: "Крупные ромбы (BMW M / AMG)",
+    promptText: "bold diamond-quilted pattern on seat centers — large rotated squares (roughly 5–7 cm across) with crisp contrast stitching along every diamond edge, and a small contrast pin-point button at each diamond intersection (BMW M Individual / Mercedes-AMG Designo style)"
+  },
+  {
+    id: "fine_diamond",
+    nameRu: "Мелкие ромбы (Bentley)",
+    promptText: "fine diamond quilting — dense crosshatch of small diamond cells (roughly 2–3 cm across) covering seat centers, door inserts and headliner where applicable, with tiny contrast stitching along each line (Bentley Mulliner / Rolls-Royce Bespoke style)"
+  },
+  {
+    id: "honeycomb",
+    nameRu: "Соты (Audi RS / Porsche)",
+    promptText: "hexagonal honeycomb quilting on seat centers — regular hexagonal cells with contrast stitching around each hexagon edge (Audi RS Performance / Porsche GT3 style)"
+  },
+  {
+    id: "horiz_pleats",
+    nameRu: "Горизонтальные плиссе (Recaro)",
+    promptText: "horizontal pleated ribs running across the seat centers — parallel raised seams spaced every 4–5 cm (classic Recaro Sport / Porsche classic style)"
+  },
+  {
+    id: "vert_pleats",
+    nameRu: "Вертикальные плиссе",
+    promptText: "vertical pleated ribs on seat centers running top-to-bottom — parallel raised seams spaced every 4–5 cm, visible also on backrests"
+  },
+  {
+    id: "square_grid",
+    nameRu: "Квадратная сетка",
+    promptText: "square-grid quilting on seat centers — aligned square cells (not rotated) with contrast stitching along each edge of every square"
+  },
+  {
+    id: "baseball",
+    nameRu: "Бейсбольная строчка (GT-R)",
+    promptText: "baseball-style double contrast stitching — two parallel rows of bold contrast thread running along seat seams and around bolsters, no quilting on the centers (Nissan GT-R / sports tuner style)"
+  },
+  {
+    id: "chevron",
+    nameRu: "Шеврон / ёлочка",
+    promptText: "chevron / herringbone stitching pattern on seat centers — repeating V-shaped angled ribs forming a zig-zag texture"
+  },
+  {
+    id: "perforated",
+    nameRu: "Перфорация без рисунка",
+    promptText: "perforated leather on seat centers (regular dotted holes for ventilation) with no quilting, only perimeter contrast stitching"
+  },
+];
+
+// ========== CAR-TYPE HELPERS ==========
+// Camera angles that need rear doors / rear seat access should be hidden for strict 2-door cars.
+export function hasRearAccess(type: string | undefined | null): boolean {
+  if (!type) return true;
+  const parts = type.toLowerCase().split('/').map(s => s.trim());
+  const twoDoorOnly = new Set(['coupe', 'roadster', 'cabrio', 'convertible']);
+  // Hide only if EVERY variant is a strict 2-door body style
+  return !parts.every(p => twoDoorOnly.has(p));
+}

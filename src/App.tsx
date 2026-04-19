@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { PR, AZ, genR } from './data';
-import { CAMERA_ANGLES, CAR_DATABASE } from './carDatabase';
+import { CAMERA_ANGLES, CAR_DATABASE, ALCANTARA_ZONES, STITCH_PATTERNS } from './carDatabase';
 import { SkinSamples } from './components/SkinSamples';
 import { RightPanel } from './components/RightPanel';
 import { CarInteriorSVG } from './components/CarInteriorSVG';
@@ -8,6 +8,8 @@ import { AIPrompt } from './components/AIPrompt';
 import { CarSelector } from './components/CarSelector';
 import { CameraAngleSelector } from './components/CameraAngle';
 import { QuickColorBar } from './components/QuickColorBar';
+import { AlcantaraSelector } from './components/AlcantaraSelector';
+import { StitchSelector } from './components/StitchSelector';
 
 function App() {
   const [colors, setColors] = useState<Record<string, string>>(PR[0].colors);
@@ -24,6 +26,10 @@ function App() {
 
   // Camera angle
   const [cameraAngle, setCameraAngle] = useState<string>('driver_door');
+
+  // Alcantara (multi-select) + stitch pattern (single-select)
+  const [alcantaraZones, setAlcantaraZones] = useState<string[]>([]);
+  const [stitchPattern, setStitchPattern] = useState<string>('diamond');
 
   // Layout: false = vertical (mobile default), true = horizontal (50/50)
   const [isHorizontal, setIsHorizontal] = useState(false);
@@ -75,6 +81,22 @@ function App() {
     return CAMERA_ANGLES.find(a => a.id === cameraAngle)?.prompt || CAMERA_ANGLES[0].prompt;
   };
 
+  // ===== ALCANTARA LINE =====
+  const getAlcantaraPrompt = () => {
+    if (alcantaraZones.length === 0) return null;
+    const parts = alcantaraZones
+      .map(id => ALCANTARA_ZONES.find(z => z.id === id)?.promptText)
+      .filter(Boolean);
+    return `ALCANTARA SUEDE APPLIED to: ${parts.join('; ')}. Matte fuzzy suede texture (not leather) with subtle directional nap, visibly distinct from the smooth leather on adjacent panels.`;
+  };
+
+  // ===== STITCH LINE =====
+  const getStitchPrompt = () => {
+    const s = STITCH_PATTERNS.find(p => p.id === stitchPattern);
+    if (!s) return null;
+    return `STITCHING / QUILTING PATTERN: ${s.promptText}. The pattern must be consistent across all seats (front and rear where present).`;
+  };
+
   // ===== FULL PROMPT — every detail included =====
   const getPromptText = () => {
     const h = (id: string) => (colors[id] || "#1A1A1A").toUpperCase();
@@ -83,19 +105,25 @@ function App() {
     const u = [...new Set(AZ.map(z => h(z.id)))].length;
     const carDesc = getCarDesc();
     const camPrompt = getCameraPrompt();
+    const alcLine = getAlcantaraPrompt();
+    const stitchLine = getStitchPrompt();
 
-    return [
+    const lines = [
       `Photorealistic interior of ${carDesc}, custom leather upholstery.`,
-      `${camPrompt}. ${u} distinct colors used, premium leather & alcantara materials.`,
-      `SEATS — Driver: base ${h("sb_d")}, bolsters ${h("sv_d")}, headrest ${h("hr_d")}. Passenger: base ${h("sb_p")}, bolsters ${h("sv_p")}, headrest ${h("hr_p")}. Quilted diamond-stitched centers.`,
+      `${camPrompt} ${u} distinct colors used, premium leather & alcantara materials.`,
+      `SEATS — Driver: base ${h("sb_d")}, bolsters ${h("sv_d")}, headrest ${h("hr_d")}. Passenger: base ${h("sb_p")}, bolsters ${h("sv_p")}, headrest ${h("hr_p")}.`,
       `DOORS — Left: upper panel ${h("du_l")}, accent strip ${h("da_l")}, main insert ${h("di_l")}, kick panel ${h("dl_l")}, handle ${h("dh_l")}. Right: upper panel ${h("du_r")}, accent strip ${h("da_r")}, main insert ${h("di_r")}, kick panel ${h("dl_r")}, handle ${h("dh_r")}.`,
       `STEERING WHEEL — Top rim ${h("sw_t")}, side grips ${h("sw_s")}, bottom rim ${h("sw_b")}, spokes ${h("sw_sp")}, center airbag pad ${h("sw_c")}. OEM 3-spoke design.`,
       `CENTER CONSOLE — Shift knob ${h("sk")}, shift boot ${h("sbo")}, handbrake handle ${h("hh")}, handbrake boot ${h("hbo")}, armrest lid ${h("arm")}, tunnel cover ${h("con")}.`,
       `DASHBOARD — Upper dashboard ${h("dt")}, lower dashboard ${h("db")}. Trim inlays: ${trimEn}.`,
       `FLOOR — Driver mat ${h("mat_d")}, passenger mat ${h("mat_p")}. Driver footwell ${h("fw_d")}, passenger footwell ${h("fw_p")}.`,
       `ACCENTS — Contrast stitching thread ${h("st")}. Piping/welting ${h("pp")}.`,
+      stitchLine,
+      alcLine,
       `Studio lighting, 8K resolution, hyper-detailed leather grain texture, all factory controls and gauges visible.`
-    ].join("\n\n");
+    ].filter(Boolean);
+
+    return lines.join("\n\n");
   };
 
   // ===== HEADER TITLE =====
@@ -183,7 +211,17 @@ function App() {
               year={carYear} setYear={setCarYear}
               extColor={extColor} setExtColor={setExtColor}
             />
-            <CameraAngleSelector selected={cameraAngle} onSelect={setCameraAngle} />
+            <CameraAngleSelector selected={cameraAngle} onSelect={setCameraAngle} carType={(() => {
+              const mk = CAR_DATABASE.find(m => m.name === carMake);
+              const md = mk?.models.find(m => `${m.name} (${m.body})` === carModel);
+              return md?.type || null;
+            })()} />
+            <AlcantaraSelector
+              selected={alcantaraZones}
+              onToggle={(id) => setAlcantaraZones(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
+              onClear={() => setAlcantaraZones([])}
+            />
+            <StitchSelector selected={stitchPattern} onSelect={setStitchPattern} />
             <RightPanel colors={colors} setColors={setColors} activeZone={activeZone} setActiveZone={setActiveZone} trimId={trimId} setTrimId={setTrimId} trimColor={trimColor} setTrimColor={setTrimColor} />
             {miniPalette}
             <AIPrompt promptText={getPromptText()} />

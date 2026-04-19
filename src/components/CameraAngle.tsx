@@ -1,11 +1,23 @@
-import { CAMERA_ANGLES } from '../carDatabase';
+import { CAMERA_ANGLES, hasRearAccess } from '../carDatabase';
+import { useEffect } from 'react';
 
 interface CameraAngleProps {
     selected: string;
     onSelect: (id: string) => void;
+    carType?: string | null;
 }
 
-export function CameraAngleSelector({ selected, onSelect }: CameraAngleProps) {
+export function CameraAngleSelector({ selected, onSelect, carType }: CameraAngleProps) {
+    const rearAllowed = hasRearAccess(carType || undefined);
+    const visibleAngles = CAMERA_ANGLES.filter(a => !a.requires4Door || rearAllowed);
+
+    // If current selection is a rear angle but the car is 2-door, fall back to driver_door
+    useEffect(() => {
+        if (!visibleAngles.some(a => a.id === selected)) {
+            onSelect(visibleAngles[0]?.id || 'driver_door');
+        }
+    }, [carType, selected, visibleAngles, onSelect]);
+
     return (
         <div className="panel" style={{ padding: '16px', borderRadius: 'var(--radius-sm)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
@@ -16,7 +28,7 @@ export function CameraAngleSelector({ selected, onSelect }: CameraAngleProps) {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '6px' }}>
-                {CAMERA_ANGLES.map(a => {
+                {visibleAngles.map(a => {
                     const isActive = selected === a.id;
                     return (
                         <button
@@ -44,6 +56,12 @@ export function CameraAngleSelector({ selected, onSelect }: CameraAngleProps) {
                     );
                 })}
             </div>
+
+            {!rearAllowed && (
+                <p style={{ fontSize: '0.7rem', color: 'var(--text-dark)', marginTop: '8px' }}>
+                    Ракурсы с задних сидений скрыты — у этой модели только 2 двери.
+                </p>
+            )}
         </div>
     );
 }
