@@ -30,21 +30,28 @@ function App() {
   const [alcantaraZones, setAlcantaraZones] = useState<string[]>([]);
   const [stitchPattern, setStitchPattern] = useState<string>('diamond');
 
-  // Layout: false = vertical (mobile default), true = horizontal (50/50)
-  const [isHorizontal, setIsHorizontal] = useState(false);
+  // Layout: false = vertical, true = horizontal. Desktop is always horizontal; mobile persists choice.
+  const [isHorizontal, setIsHorizontal] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    if (window.innerWidth >= 1024) return true;
+    return localStorage.getItem('layout_h') === '1';
+  });
 
-  // Desktop is always horizontal; mobile persists user choice
   useEffect(() => {
     const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
-    if (isDesktop) { setIsHorizontal(true); return; }
-    const saved = localStorage.getItem('layout_h');
-    if (saved === '1') setIsHorizontal(true);
-  }, []);
-  useEffect(() => {
-    localStorage.setItem('layout_h', isHorizontal ? '1' : '0');
+    if (!isDesktop) localStorage.setItem('layout_h', isHorizontal ? '1' : '0');
     document.body.classList.toggle('layout-hz', isHorizontal);
     return () => { document.body.classList.remove('layout-hz'); };
   }, [isHorizontal]);
+
+  // Force horizontal if viewport grows to desktop after load
+  useEffect(() => {
+    const onResize = () => {
+      if (typeof window !== 'undefined' && window.innerWidth >= 1024) setIsHorizontal(true);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const handleQuickColor = (zoneId: string, hex: string) => {
     setColors(prev => ({ ...prev, [zoneId]: hex }));

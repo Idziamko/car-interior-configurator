@@ -187,12 +187,41 @@ body.layout-hz .app-root {
 
 .btn-primary {
   background: linear-gradient(180deg, #FF7A3D, #EE5818);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   color: #1A0A00;
-  box-shadow: var(--accent-glow), 0 2px 0 rgba(0, 0, 0, 0.1) inset, 0 -1px 0 rgba(255, 255, 255, 0.25) inset;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  padding: 12px 22px;
+  min-height: 46px;
+  box-shadow:
+    0 0 0 1px rgba(255, 106, 43, 0.25),
+    0 12px 42px -8px rgba(255, 106, 43, 0.55),
+    0 2px 0 rgba(0, 0, 0, 0.1) inset,
+    0 -1px 0 rgba(255, 255, 255, 0.3) inset;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
+  position: relative;
 }
-.btn-primary:hover { filter: brightness(1.08); }
+.btn-primary:hover,
+.btn-primary:focus-visible {
+  background: linear-gradient(180deg, #E85515, #B53E08);
+  color: #0A0300;
+  border-color: rgba(255, 255, 255, 0.28);
+  outline: none;
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(255, 106, 43, 0.45),
+    0 18px 56px -6px rgba(255, 106, 43, 0.8),
+    0 2px 0 rgba(0, 0, 0, 0.1) inset,
+    0 -1px 0 rgba(255, 255, 255, 0.3) inset;
+}
+.btn-primary:active {
+  transform: translateY(1px);
+  filter: brightness(0.9);
+  box-shadow:
+    0 0 0 1px rgba(255, 106, 43, 0.5),
+    0 6px 20px -4px rgba(255, 106, 43, 0.6),
+    0 2px 4px rgba(0, 0, 0, 0.25) inset;
+}
 
 .btn-ghost { background: transparent; border-color: var(--line); color: var(--ink-2); }
 .btn-ghost:hover { background: var(--surface); color: var(--ink); }
@@ -548,8 +577,14 @@ input[type="range"]::-moz-range-thumb {
   .btn-primary:hover,
   .random-btn:hover {
     background: linear-gradient(180deg, #FF7A3D, #EE5818);
-    border-color: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.22);
     color: #1A0A00;
+    transform: none;
+    box-shadow:
+      0 0 0 1px rgba(255, 106, 43, 0.25),
+      0 12px 42px -8px rgba(255, 106, 43, 0.55),
+      0 2px 0 rgba(0, 0, 0, 0.1) inset,
+      0 -1px 0 rgba(255, 255, 255, 0.3) inset;
   }
   .chip:hover,
   .preset-btn:hover {
