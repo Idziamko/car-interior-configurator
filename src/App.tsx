@@ -76,12 +76,10 @@ function App() {
     return desc.trim();
   };
 
-  // ===== CAMERA PROMPT =====
   const getCameraPrompt = () => {
     return CAMERA_ANGLES.find(a => a.id === cameraAngle)?.prompt || CAMERA_ANGLES[0].prompt;
   };
 
-  // ===== ALCANTARA LINE =====
   const getAlcantaraPrompt = () => {
     if (alcantaraZones.length === 0) return null;
     const parts = alcantaraZones
@@ -90,14 +88,12 @@ function App() {
     return `ALCANTARA SUEDE APPLIED to: ${parts.join('; ')}. Matte fuzzy suede texture (not leather) with subtle directional nap, visibly distinct from the smooth leather on adjacent panels.`;
   };
 
-  // ===== STITCH LINE =====
   const getStitchPrompt = () => {
     const s = STITCH_PATTERNS.find(p => p.id === stitchPattern);
     if (!s) return null;
     return `STITCHING / QUILTING PATTERN: ${s.promptText}. The pattern must be consistent across all seats (front and rear where present).`;
   };
 
-  // ===== FULL PROMPT — every detail included =====
   const getPromptText = () => {
     const h = (id: string) => (colors[id] || "#1A1A1A").toUpperCase();
 
@@ -126,43 +122,54 @@ function App() {
     return lines.join("\n\n");
   };
 
-  // ===== HEADER TITLE =====
-  const headerTitle = carMake
-    ? `${carMake}${carModel ? ' ' + carModel.split(' (')[0] : ''}`
-    : 'КОНФИГУРАТОР';
+  // ===== HEADER TITLE — split into brand + model for serif styling =====
+  const headerBrand = carMake || 'Car';
+  const headerModel = carModel ? carModel.split(' (')[0] : '';
 
   const carSubtitle = (() => {
     const mk = CAR_DATABASE.find(m => m.name === carMake);
     const md = mk?.models.find(m => `${m.name} (${m.body})` === carModel);
-    if (!carMake) return null;
-    const parts = [carMake];
-    if (md) parts.push(`${md.name} ${md.body}`);
+    if (!carMake) return 'Upholstery Visualizer';
+    const parts = ['Upholstery Visualizer'];
+    if (md) parts.push(`${md.body}`);
     if (carYear) parts.push(carYear);
     if (md) parts.push(md.type);
     return parts.join(' · ');
   })();
 
-  // ===== RENDER =====
   return (
     <div className="app-root">
       {/* HEADER */}
       <header className="app-header">
         <div className="header-top">
           <div>
-            <h1 className="title-main">{headerTitle}</h1>
-            <p className="title-sub">ВИЗУАЛИЗАТОР ПЕРЕТЯЖКИ САЛОНА</p>
+            <h1 className="title-main">
+              {headerBrand} {headerModel && <em>{headerModel}</em>}
+            </h1>
+            <p className="title-sub">{carSubtitle}</p>
           </div>
           <div className="header-actions">
-            <button onClick={doRandom} className="random-btn">🎲 Случайная</button>
-            <button onClick={() => setIsHorizontal(h => !h)} className="toggle-btn">
-              {isHorizontal ? '📱 Вертикально' : '📐 Горизонтально'}
-            </button>
+            <button onClick={doRandom} className="btn btn-primary">✦ Рандом</button>
+            <div className="seg">
+              <button className={!isHorizontal ? 'on' : ''} onClick={() => setIsHorizontal(false)}>Vertical</button>
+              <button className={isHorizontal ? 'on' : ''} onClick={() => setIsHorizontal(true)}>Horizontal</button>
+            </div>
           </div>
         </div>
-        {randomTag && <p style={{ fontSize: '0.78rem', color: 'var(--text-dark)' }}>Палитра: «<span style={{ color: 'var(--text-muted)' }}>{randomTag}</span>»</p>}
+        {randomTag && (
+          <p style={{ fontSize: '12.5px', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em' }}>
+            Палитра · <span style={{ color: 'var(--accent-2)' }}>{randomTag}</span>
+          </p>
+        )}
         <div className="presets-row">
           {PR.map((p, i) => (
-            <button key={i} onClick={() => { setColors(p.colors); setTrimId(p.trim); setRandomTag(null); }} className="preset-btn">{p.name}</button>
+            <button
+              key={i}
+              onClick={() => { setColors(p.colors); setTrimId(p.trim); setRandomTag(null); }}
+              className="chip"
+            >
+              {p.name}
+            </button>
           ))}
         </div>
       </header>
@@ -182,19 +189,20 @@ function App() {
         );
 
         const miniPalette = (
-          <div className="panel" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+          <div className="panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
               {AZ.map(z => (
                 <div key={z.id} title={z.l} onClick={() => setActiveZone(z.id)} style={{
-                  width: '22px', height: '22px', borderRadius: '5px',
+                  width: '24px', height: '24px', borderRadius: '7px',
                   backgroundColor: colors[z.id] || '#1A1A1A',
-                  border: activeZone === z.id ? '2px solid white' : '1.5px solid #1a1a1c',
-                  cursor: 'pointer', transition: 'all 0.15s'
+                  border: activeZone === z.id ? '2px solid var(--accent)' : '1px solid var(--line-strong)',
+                  boxShadow: activeZone === z.id ? '0 0 0 1px var(--accent-soft)' : 'inset 0 1px 0 rgba(255,255,255,0.1)',
+                  cursor: 'pointer', transition: 'all 0.15s var(--ease)'
                 }} />
               ))}
             </div>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-dark)' }}>
-              {AZ.length} зон · {[...new Set(AZ.map(z => (colors[z.id] || '#1A1A1A').toUpperCase()))].length} уникальных цветов
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-3)', letterSpacing: '0.08em' }}>
+              {AZ.length} зон · {[...new Set(AZ.map(z => (colors[z.id] || '#1A1A1A').toUpperCase()))].length} уникальных
             </p>
           </div>
         );

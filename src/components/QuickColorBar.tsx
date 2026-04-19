@@ -9,52 +9,46 @@ interface QuickColorBarProps {
 export function QuickColorBar({ activeZone, colors, onColorChange }: QuickColorBarProps) {
     if (!activeZone) return null;
 
-    // find zone label
     const zone = ZG.flatMap(g => g.zones).find(z => z.id === activeZone);
     if (!zone) return null;
 
     const currentColor = colors[activeZone] || '#1A1A1A';
 
-    // used colors in interior (unique)
     const usedColors = [...new Set(Object.values(colors).map(c => c.toUpperCase()))];
-
-    // recommended swatches
     const recColors = SW.map(s => s.h.toUpperCase());
-
-    // merge: used first, then recommended (skip duplicates)
     const allColors = [...usedColors];
-    recColors.forEach(c => {
-        if (!allColors.includes(c)) allColors.push(c);
-    });
+    recColors.forEach(c => { if (!allColors.includes(c)) allColors.push(c); });
 
     return (
-        <div style={{
-            padding: '12px 16px',
-            backgroundColor: 'var(--card)',
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid var(--border)',
+        <div className="qcb" style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--line)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '16px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '10px',
+            gap: '14px',
+            boxShadow: 'var(--shadow-sm)'
         }}>
             {/* Zone name + current color */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                 <div style={{
-                    width: '28px', height: '28px', borderRadius: '6px',
+                    width: '36px', height: '36px', borderRadius: '12px',
                     backgroundColor: currentColor,
-                    border: '2px solid white',
+                    border: '1px solid var(--line-glow)',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 6px rgba(0,0,0,0.4)',
                     flexShrink: 0,
                 }} />
-                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--ink)', flex: 1 }}>
                     {zone.l}
                 </span>
-                <span className="mono" style={{ fontSize: '0.72rem', color: 'var(--text-dark)', marginLeft: 'auto' }}>
+                <span className="mono" style={{ fontSize: '12px', color: 'var(--ink-3)' }}>
                     {currentColor.toUpperCase()}
                 </span>
             </div>
 
-            {/* Color swatches row */}
-            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', alignItems: 'center' }}>
+            {/* Swatches */}
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
                 {allColors.map((c, i) => {
                     const isSelected = currentColor.toUpperCase() === c;
                     return (
@@ -63,14 +57,17 @@ export function QuickColorBar({ activeZone, colors, onColorChange }: QuickColorB
                             onClick={() => onColorChange(activeZone, c)}
                             title={c}
                             style={{
-                                width: '28px', height: '28px', borderRadius: '5px',
+                                width: '34px', height: '34px', borderRadius: '10px',
                                 backgroundColor: c,
-                                border: isSelected ? '2.5px solid white' : '1.5px solid var(--border)',
+                                border: isSelected ? '2px solid var(--accent)' : '1px solid var(--line-strong)',
+                                boxShadow: isSelected
+                                    ? '0 0 0 1px var(--accent-soft), inset 0 1px 0 rgba(255,255,255,0.15)'
+                                    : 'inset 0 1px 0 rgba(255,255,255,0.1)',
                                 cursor: 'pointer',
-                                transition: 'all 0.12s',
+                                transition: 'all 0.2s var(--ease)',
                                 display: 'flex', justifyContent: 'center', alignItems: 'center',
-                                fontSize: '11px', color: 'white', textShadow: '0 1px 2px rgba(0,0,0,0.8)',
-                                transform: isSelected ? 'scale(1.15)' : 'scale(1)',
+                                fontSize: '12px', color: 'white', textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                                transform: isSelected ? 'scale(1.1)' : 'scale(1)',
                             }}
                         >
                             {isSelected && '✓'}
@@ -80,22 +77,21 @@ export function QuickColorBar({ activeZone, colors, onColorChange }: QuickColorB
 
                 {/* Native color picker */}
                 <div style={{
-                    width: '28px', height: '28px', borderRadius: '5px',
+                    width: '34px', height: '34px', borderRadius: '10px',
                     border: '1.5px dashed var(--accent)',
                     position: 'relative', overflow: 'hidden',
                     display: 'flex', justifyContent: 'center', alignItems: 'center',
                     cursor: 'pointer', flexShrink: 0,
+                    background: 'var(--accent-soft)',
+                    boxShadow: 'var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.1)',
+                    transition: 'all 0.2s var(--ease)',
                 }}>
                     <span style={{ fontSize: '14px', pointerEvents: 'none' }}>🎨</span>
                     <input
                         type="color"
                         value={currentColor}
                         onChange={e => onColorChange(activeZone, e.target.value)}
-                        style={{
-                            position: 'absolute', inset: '-10px',
-                            width: '50px', height: '50px',
-                            opacity: 0, cursor: 'pointer',
-                        }}
+                        style={{ position: 'absolute', inset: '-10px', width: '60px', height: '60px', opacity: 0, cursor: 'pointer' }}
                     />
                 </div>
             </div>

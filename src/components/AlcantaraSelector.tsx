@@ -12,7 +12,7 @@ export function AlcantaraSelector({ selected, onToggle, onClear }: AlcantaraSele
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '1.1rem' }}>🧶</span>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600, letterSpacing: '2px', color: 'var(--text-main)' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, letterSpacing: '2px', color: 'var(--ink)' }}>
                         АЛЬКАНТАРА
                     </span>
                 </div>
@@ -21,12 +21,13 @@ export function AlcantaraSelector({ selected, onToggle, onClear }: AlcantaraSele
                         onClick={onClear}
                         style={{
                             padding: '4px 10px',
-                            borderRadius: '4px',
-                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius-sm)',
+                            border: '1px solid var(--line)',
                             backgroundColor: 'transparent',
-                            color: 'var(--text-muted)',
+                            color: 'var(--ink-3)',
                             fontSize: '0.7rem',
                             cursor: 'pointer',
+                            transition: 'all 0.2s var(--ease)',
                         }}
                     >
                         Сбросить
@@ -34,7 +35,7 @@ export function AlcantaraSelector({ selected, onToggle, onClear }: AlcantaraSele
                 )}
             </div>
 
-            <p style={{ fontSize: '0.7rem', color: 'var(--text-dark)', marginBottom: '10px' }}>
+            <p style={{ fontSize: '0.7rem', color: 'var(--ink-3)', marginBottom: '10px' }}>
                 Выбери где будет алькантара (можно несколько)
             </p>
 
@@ -48,13 +49,15 @@ export function AlcantaraSelector({ selected, onToggle, onClear }: AlcantaraSele
                             style={{
                                 padding: '10px 8px',
                                 borderRadius: 'var(--radius-sm)',
-                                border: isActive ? '1.5px solid white' : '1px solid var(--border)',
-                                backgroundColor: isActive ? '#1a1a1c' : 'var(--card-hover)',
-                                color: isActive ? 'white' : 'var(--text-muted)',
+                                border: isActive ? '1px solid rgba(255, 106, 43, 0.55)' : '1px solid var(--line)',
+                                background: isActive ? 'var(--accent-soft)' : 'var(--surface-2)',
+                                color: isActive ? 'var(--accent-2)' : 'var(--ink-2)',
+                                boxShadow: isActive ? 'var(--accent-glow)' : 'var(--shadow-sm)',
                                 fontSize: '0.75rem',
+                                fontWeight: isActive ? 600 : 500,
                                 textAlign: 'center',
                                 cursor: 'pointer',
-                                transition: 'all 0.15s',
+                                transition: 'all 0.2s var(--ease)',
                             }}
                         >
                             {z.nameRu}

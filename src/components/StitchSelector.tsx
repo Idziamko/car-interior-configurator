@@ -10,7 +10,7 @@ export function StitchSelector({ selected, onSelect }: StitchSelectorProps) {
         <div className="panel" style={{ padding: '16px', borderRadius: 'var(--radius-sm)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
                 <span style={{ fontSize: '1.1rem' }}>💠</span>
-                <span style={{ fontSize: '0.85rem', fontWeight: 600, letterSpacing: '2px', color: 'var(--text-main)' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, letterSpacing: '2px', color: 'var(--ink)' }}>
                     РИСУНОК ПРОШИВКИ
                 </span>
             </div>
@@ -25,13 +25,15 @@ export function StitchSelector({ selected, onSelect }: StitchSelectorProps) {
                             style={{
                                 padding: '10px 8px',
                                 borderRadius: 'var(--radius-sm)',
-                                border: isActive ? '1.5px solid white' : '1px solid var(--border)',
-                                backgroundColor: isActive ? '#1a1a1c' : 'var(--card-hover)',
-                                color: isActive ? 'white' : 'var(--text-muted)',
+                                border: isActive ? '1px solid rgba(255, 106, 43, 0.55)' : '1px solid var(--line)',
+                                background: isActive ? 'var(--accent-soft)' : 'var(--surface-2)',
+                                color: isActive ? 'var(--accent-2)' : 'var(--ink-2)',
+                                boxShadow: isActive ? 'var(--accent-glow)' : 'var(--shadow-sm)',
                                 fontSize: '0.75rem',
+                                fontWeight: isActive ? 600 : 500,
                                 textAlign: 'center',
                                 cursor: 'pointer',
-                                transition: 'all 0.15s',
+                                transition: 'all 0.2s var(--ease)',
                                 lineHeight: 1.25,
                             }}
                         >
