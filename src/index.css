@@ -32,11 +32,11 @@
   --border: var(--line-strong);
   --border-active: var(--line-glow);
 
-  /* Accent */
-  --accent: #FF6A2B;
-  --accent-2: #FFB47A;
-  --accent-soft: rgba(255, 106, 43, 0.14);
-  --accent-glow: 0 0 0 1px rgba(255, 106, 43, 0.35), 0 8px 24px -4px rgba(255, 106, 43, 0.25);
+  /* Accent — emerald / teal (Bessonov / Wattson vibe) */
+  --accent: #2FB37A;
+  --accent-2: #5FD4A1;
+  --accent-soft: rgba(47, 179, 122, 0.14);
+  --accent-glow: 0 0 0 1px rgba(47, 179, 122, 0.35), 0 8px 24px -4px rgba(47, 179, 122, 0.25);
   --accent-blue: #5AB4D0;
 
   /* Success */
@@ -69,9 +69,11 @@ html, body { max-width: 100vw; overflow-x: hidden; }
 
 body {
   background:
-    radial-gradient(1200px 600px at 80% -10%, rgba(255, 106, 43, 0.06), transparent 60%),
-    radial-gradient(900px 500px at -10% 120%, rgba(80, 140, 255, 0.04), transparent 60%),
-    var(--bg);
+    radial-gradient(1500px 950px at 50% 110%, rgba(47, 179, 122, 0.32), transparent 72%),
+    radial-gradient(900px 650px at 82% 12%, rgba(60, 200, 140, 0.08), transparent 65%),
+    radial-gradient(700px 500px at 15% 25%, rgba(0, 0, 0, 0.55), transparent 60%),
+    linear-gradient(180deg, #070A09 0%, #0A0F0D 45%, #0D1714 100%);
+  background-attachment: fixed;
   color: var(--ink-2);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -84,7 +86,7 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--surface-hi); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--line-glow); }
-::selection { background: var(--accent); color: #1A0A00; }
+::selection { background: var(--accent); color: #041A10; }
 
 h1, h2, h3 { color: var(--ink); font-weight: 600; line-height: 1.1; letter-spacing: -0.01em; }
 
@@ -126,7 +128,7 @@ body.layout-hz .app-root {
   flex-direction: column;
   gap: 14px;
   border-bottom: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(255, 106, 43, 0.03), transparent 60%);
+  background: linear-gradient(180deg, rgba(47, 179, 122, 0.03), transparent 60%);
 }
 .header-top {
   display: flex;
@@ -186,16 +188,16 @@ body.layout-hz .app-root {
 .btn:active { transform: translateY(0); }
 
 .btn-primary {
-  background: linear-gradient(180deg, #FF7A3D, #EE5818);
+  background: linear-gradient(180deg, #3FCC8A, #1D9466);
   border: 1px solid rgba(255, 255, 255, 0.22);
-  color: #1A0A00;
+  color: #041A10;
   font-weight: 700;
   letter-spacing: 0.01em;
   padding: 12px 22px;
   min-height: 46px;
   box-shadow:
-    0 0 0 1px rgba(255, 106, 43, 0.25),
-    0 12px 42px -8px rgba(255, 106, 43, 0.55),
+    0 0 0 1px rgba(47, 179, 122, 0.25),
+    0 12px 42px -8px rgba(47, 179, 122, 0.55),
     0 2px 0 rgba(0, 0, 0, 0.1) inset,
     0 -1px 0 rgba(255, 255, 255, 0.3) inset;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
@@ -203,14 +205,14 @@ body.layout-hz .app-root {
 }
 .btn-primary:hover,
 .btn-primary:focus-visible {
-  background: linear-gradient(180deg, #E85515, #B53E08);
-  color: #0A0300;
+  background: linear-gradient(180deg, #1D9466, #0F6D48);
+  color: #02120A;
   border-color: rgba(255, 255, 255, 0.28);
   outline: none;
   transform: translateY(-1px);
   box-shadow:
-    0 0 0 1px rgba(255, 106, 43, 0.45),
-    0 18px 56px -6px rgba(255, 106, 43, 0.8),
+    0 0 0 1px rgba(47, 179, 122, 0.45),
+    0 18px 56px -6px rgba(47, 179, 122, 0.8),
     0 2px 0 rgba(0, 0, 0, 0.1) inset,
     0 -1px 0 rgba(255, 255, 255, 0.3) inset;
 }
@@ -218,8 +220,8 @@ body.layout-hz .app-root {
   transform: translateY(1px);
   filter: brightness(0.9);
   box-shadow:
-    0 0 0 1px rgba(255, 106, 43, 0.5),
-    0 6px 20px -4px rgba(255, 106, 43, 0.6),
+    0 0 0 1px rgba(47, 179, 122, 0.5),
+    0 6px 20px -4px rgba(47, 179, 122, 0.6),
     0 2px 4px rgba(0, 0, 0, 0.25) inset;
 }
 
@@ -232,8 +234,8 @@ body.layout-hz .app-root {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   padding: 11px 18px; border-radius: var(--radius-pill);
   font-weight: 600; font-size: 13.5px; min-height: 44px;
-  background: linear-gradient(180deg, #FF7A3D, #EE5818);
-  border: 1px solid rgba(255, 255, 255, 0.18); color: #1A0A00;
+  background: linear-gradient(180deg, #3FCC8A, #1D9466);
+  border: 1px solid rgba(255, 255, 255, 0.18); color: #041A10;
   box-shadow: var(--accent-glow), 0 2px 0 rgba(0, 0, 0, 0.1) inset, 0 -1px 0 rgba(255, 255, 255, 0.25) inset;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
   white-space: nowrap; cursor: pointer; transition: all .25s var(--ease);
@@ -273,6 +275,21 @@ body.layout-hz .app-root {
 }
 .seg button.on { background: var(--surface-hi); color: var(--ink); box-shadow: var(--shadow-sm); }
 
+/* Icon-only variant: compact square buttons */
+.seg-icon { padding: 3px; gap: 2px; }
+.seg-icon button {
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-3);
+}
+.seg-icon button.on { color: var(--accent-2); }
+.seg-icon svg { display: block; }
+
 /* ============================================
    CHIPS (presets)
    ============================================ */
@@ -298,7 +315,7 @@ body.layout-hz .app-root {
 .chip:hover,
 .preset-btn:hover { border-color: var(--line-strong); color: var(--ink); background: var(--surface-2); }
 .chip.on,
-.preset-btn.on { background: var(--accent-soft); border-color: rgba(255, 106, 43, 0.5); color: var(--accent-2); }
+.preset-btn.on { background: var(--accent-soft); border-color: rgba(47, 179, 122, 0.5); color: var(--accent-2); }
 
 /* ============================================
    MAIN WRAP
@@ -322,7 +339,7 @@ body.layout-hz .app-root {
   position: relative;
   border-radius: var(--radius-lg);
   background:
-    radial-gradient(500px 260px at 50% 60%, rgba(255, 106, 43, 0.10), transparent 70%),
+    radial-gradient(500px 260px at 50% 60%, rgba(47, 179, 122, 0.10), transparent 70%),
     linear-gradient(180deg, var(--surface), var(--bg-elev));
   border: 1px solid var(--line);
   overflow: hidden;
@@ -480,12 +497,21 @@ input[type="range"]::-moz-range-thumb {
 
 @media (max-width: 600px) {
   :root { --pad-x: 14px; }
-  .header-top { flex-direction: column; align-items: stretch; gap: 10px; }
-  .header-actions { width: 100%; }
+  /* Keep title + actions on the same row (like desktop); wrap only if truly needed */
+  .header-top {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .header-top > div:first-child { min-width: 0; flex: 1 1 auto; }
+  .header-actions { width: auto; flex-wrap: nowrap; }
   .header-actions .btn,
-  .header-actions .random-btn,
-  .header-actions .toggle-btn { flex: 1; }
-  .app-header { padding: 16px var(--pad-x) 14px; }
+  .header-actions .random-btn { flex: 0 0 auto; padding: 9px 16px; min-height: 40px; font-size: 12.5px; }
+  .title-main { font-size: 24px; }
+  .title-sub { font-size: 9.5px; margin-top: 4px; }
+  .app-header { padding: 14px var(--pad-x) 12px; gap: 10px; }
 
   .main-wrap.vt .svg-wrapper { min-height: 240px; }
 }
@@ -542,7 +568,7 @@ input[type="range"]::-moz-range-thumb {
   body.layout-hz .header-actions .btn,
   body.layout-hz .header-actions .btn-primary,
   body.layout-hz .header-actions .random-btn { padding: 7px 12px; min-height: 34px; font-size: 12px; }
-  body.layout-hz .seg button { padding: 6px 10px; min-height: 28px; font-size: 12px; }
+  body.layout-hz .seg-icon button { width: 28px; height: 28px; min-height: 28px; }
   body.layout-hz .main-wrap.hz { padding: 8px var(--pad-x); }
   body.layout-hz .main-wrap.hz .car-subtitle { display: none; }
   body.layout-hz .main-wrap.hz .svg-wrapper svg {
@@ -576,13 +602,13 @@ input[type="range"]::-moz-range-thumb {
   }
   .btn-primary:hover,
   .random-btn:hover {
-    background: linear-gradient(180deg, #FF7A3D, #EE5818);
+    background: linear-gradient(180deg, #3FCC8A, #1D9466);
     border-color: rgba(255, 255, 255, 0.22);
-    color: #1A0A00;
+    color: #041A10;
     transform: none;
     box-shadow:
-      0 0 0 1px rgba(255, 106, 43, 0.25),
-      0 12px 42px -8px rgba(255, 106, 43, 0.55),
+      0 0 0 1px rgba(47, 179, 122, 0.25),
+      0 12px 42px -8px rgba(47, 179, 122, 0.55),
       0 2px 0 rgba(0, 0, 0, 0.1) inset,
       0 -1px 0 rgba(255, 255, 255, 0.3) inset;
   }

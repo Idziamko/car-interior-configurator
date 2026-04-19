@@ -28,6 +28,18 @@ export function RightPanel({ colors, setColors, activeZone, setActiveZone, trimI
         }
     }, [activeZone]);
 
+    // Desktop horizontal: auto-scroll the right column to the active zone
+    React.useEffect(() => {
+        if (!activeZone) return;
+        if (typeof window === 'undefined') return;
+        if (window.innerWidth < 1024) return;
+        const t = window.setTimeout(() => {
+            const el = document.getElementById(`zone-${activeZone}`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 80);
+        return () => window.clearTimeout(t);
+    }, [activeZone, openGroups]);
+
     const toggleGroup = (g: string) => {
         setOpenGroups(prev => ({ ...prev, [g]: !prev[g] }));
     };

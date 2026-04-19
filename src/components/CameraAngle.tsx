@@ -37,7 +37,7 @@ export function CameraAngleSelector({ selected, onSelect, carType }: CameraAngle
                             style={{
                                 padding: '10px 8px',
                                 borderRadius: 'var(--radius-sm)',
-                                border: isActive ? '1px solid rgba(255, 106, 43, 0.55)' : '1px solid var(--line)',
+                                border: isActive ? '1px solid rgba(47, 179, 122, 0.55)' : '1px solid var(--line)',
                                 background: isActive ? 'var(--accent-soft)' : 'var(--surface-2)',
                                 color: isActive ? 'var(--accent-2)' : 'var(--ink-2)',
                                 boxShadow: isActive ? 'var(--accent-glow)' : 'var(--shadow-sm)',

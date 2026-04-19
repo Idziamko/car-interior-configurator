@@ -151,9 +151,27 @@ function App() {
           </div>
           <div className="header-actions">
             <button onClick={doRandom} className="btn btn-primary">✦ Рандом</button>
-            <div className="seg">
-              <button className={!isHorizontal ? 'on' : ''} onClick={() => setIsHorizontal(false)}>Vertical</button>
-              <button className={isHorizontal ? 'on' : ''} onClick={() => setIsHorizontal(true)}>Horizontal</button>
+            <div className="seg seg-icon" role="group" aria-label="Ориентация">
+              <button
+                className={!isHorizontal ? 'on' : ''}
+                onClick={() => setIsHorizontal(false)}
+                aria-label="Вертикально"
+                title="Вертикально"
+              >
+                <svg width="12" height="16" viewBox="0 0 12 16" fill="none" aria-hidden="true">
+                  <rect x="1" y="1" width="10" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                </svg>
+              </button>
+              <button
+                className={isHorizontal ? 'on' : ''}
+                onClick={() => setIsHorizontal(true)}
+                aria-label="Горизонтально"
+                title="Горизонтально"
+              >
+                <svg width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden="true">
+                  <rect x="1" y="1" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
