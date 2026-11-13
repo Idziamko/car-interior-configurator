@@ -1,14 +1,48 @@
-import { useState, useEffect } from 'react';
-import { PR, AZ, genR } from './data';
-import { CAMERA_ANGLES, CAR_DATABASE, ALCANTARA_ZONES, STITCH_PATTERNS } from './carDatabase';
-import { RightPanel } from './components/RightPanel';
-import { CarInteriorSVG } from './components/CarInteriorSVG';
+import { useCallback, useEffect, useState } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
+import { PR, SW, genR, zonesFor, AZ } from './data';
+import { CAMERA_ANGLES, CAR_DATABASE, ALCANTARA_ZONES, STITCH_PATTERNS, EXTERIOR_COLORS, hasRearAccess } from './carDatabase';
+import { CabinMap } from './components/cabin/CabinMap';
 import { AIPrompt } from './components/AIPrompt';
 import { CarSelector } from './components/CarSelector';
 import { CameraAngleSelector } from './components/CameraAngle';
-import { QuickColorBar } from './components/QuickColorBar';
-import { AlcantaraSelector } from './components/AlcantaraSelector';
-import { StitchSelector } from './components/StitchSelector';
+import { ColorSheet } from './components/ColorSheet';
+import { ZoneList } from './components/ZoneList';
+import { TrimPicker, StitchPicker, AlcantaraPicker } from './components/Materials';
+import { Island } from './components/ui/Island';
+import type { IslandMsg } from './components/ui/Island';
+import { Dice, Check, Copy, Car, Sparkles, Sun, Moon, Auto } from './components/ui/icons';
+
+const LABELS: Record<string, string> = Object.fromEntries(AZ.map(z => [z.id, z.l]));
+const COLOR_NAMES = new Map(SW.map(s => [s.h.toUpperCase(), s.n]));
+
+function Section({ title, footer, action, children }: {
+  title: string; footer?: ReactNode; action?: ReactNode; children: ReactNode;
+}) {
+  return (
+    <section className="section">
+      <div className="section-head">
+        <h2>{title}</h2>
+        {action}
+      </div>
+      {children}
+      {footer && <p className="section-foot">{footer}</p>}
+    </section>
+  );
+}
+
+type Theme = 'auto' | 'light' | 'dark';
+const THEMES: Theme[] = ['auto', 'light', 'dark'];
+const THEME_NAMES: Record<Theme, string> = { auto: 'Как в системе', light: 'Светлая', dark: 'Тёмная' };
+
+function readTheme(): Theme {
+  try {
+    const t = localStorage.getItem('theme');
+    return t === 'light' || t === 'dark' ? t : 'auto';
+  } catch {
+    return 'auto';
+  }
+}
 
 function App() {
   const [colors, setColors] = useState<Record<string, string>>(PR[0].colors);
@@ -16,45 +50,69 @@ function App() {
   const [trimId, setTrimId] = useState<string>('carbon');
   const [trimColor, setTrimColor] = useState<string>('#8B5A2B');
   const [randomTag, setRandomTag] = useState<string | null>(null);
+  const [preset, setPreset] = useState<number | null>(0);
 
-  // Car selector
   const [carMake, setCarMake] = useState<string>('BMW');
   const [carModel, setCarModel] = useState<string>('Z4 (E85)');
   const [carYear, setCarYear] = useState<string>('2006');
   const [extColor, setExtColor] = useState<string>('');
-
-  // Camera angle
   const [cameraAngle, setCameraAngle] = useState<string>('driver_door');
-
-  // Alcantara (multi-select) + stitch pattern (single-select)
   const [alcantaraZones, setAlcantaraZones] = useState<string[]>([]);
   const [stitchPattern, setStitchPattern] = useState<string>('diamond');
 
-  // Layout: false = vertical, true = horizontal. Desktop is always horizontal; mobile persists choice.
-  const [isHorizontal, setIsHorizontal] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    if (window.innerWidth >= 1024) return true;
-    return localStorage.getItem('layout_h') === '1';
-  });
+  const [msg, setMsg] = useState<IslandMsg | null>(null);
+  const [scrolled, setScrolled] = useState(false);
+  const [theme, setTheme] = useState<Theme>(readTheme);
 
   useEffect(() => {
-    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
-    if (!isDesktop) localStorage.setItem('layout_h', isHorizontal ? '1' : '0');
-    document.body.classList.toggle('layout-hz', isHorizontal);
-    return () => { document.body.classList.remove('layout-hz'); };
-  }, [isHorizontal]);
-
-  // Force horizontal if viewport grows to desktop after load
-  useEffect(() => {
-    const onResize = () => {
-      if (typeof window !== 'undefined' && window.innerWidth >= 1024) setIsHorizontal(true);
+    const mq = window.matchMedia('(prefers-color-scheme: light)');
+    const apply = () => {
+      const t = theme === 'auto' ? (mq.matches ? 'light' : 'dark') : theme;
+      document.documentElement.dataset.theme = t;
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t === 'light' ? '#f2f2f7' : '#000000');
     };
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
+    apply();
+    try { localStorage.setItem('theme', theme); } catch { /* private mode */ }
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, [theme]);
+
+  const notify = useCallback((m: Omit<IslandMsg, 'key'>) => setMsg({ ...m, key: Date.now() }), []);
+  const clearMsg = useCallback(() => setMsg(null), []);
+
+  useEffect(() => {
+    const on = () => setScrolled(window.scrollY > 56);
+    on();
+    window.addEventListener('scroll', on, { passive: true });
+    return () => window.removeEventListener('scroll', on);
   }, []);
 
-  const handleQuickColor = (zoneId: string, hex: string) => {
-    setColors(prev => ({ ...prev, [zoneId]: hex }));
+  useEffect(() => {
+    if (activeZone !== 'trim') return;
+    document.getElementById('sec-trim')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [activeZone]);
+
+  const modelObj = CAR_DATABASE.find(m => m.name === carMake)?.models.find(m => `${m.name} (${m.body})` === carModel);
+  const carType = modelObj?.type || null;
+  const hasRear = hasRearAccess(carType);
+  const zones = zonesFor(hasRear).flatMap(g => g.zones);
+
+  const changeModel = (v: string) => {
+    setCarModel(v);
+    const md = CAR_DATABASE.find(m => m.name === carMake)?.models.find(m => `${m.name} (${m.body})` === v);
+    if (!md) return;
+    const rear = hasRearAccess(md.type);
+    notify({
+      icon: <Car size={18} />,
+      title: `${carMake} ${md.name}`,
+      sub: rear !== hasRear ? (rear ? 'Добавлены задний ряд и багажник' : 'Только передний ряд') : `${md.body} · ${md.type}`,
+    });
+  };
+
+  const setZoneColor = (id: string, hex: string) => {
+    setColors(prev => ({ ...prev, [id]: hex }));
+    setPreset(null);
+    notify({ color: hex, title: LABELS[id] || id, sub: COLOR_NAMES.get(hex.toUpperCase()) || hex.toUpperCase() });
   };
 
   const doRandom = () => {
@@ -62,213 +120,187 @@ function App() {
     setColors(r.colors);
     setTrimId(r.trim);
     setRandomTag(r.tag);
+    setPreset(null);
+    notify({ icon: <Sparkles size={18} />, title: r.tag, sub: 'Случайная палитра' });
   };
 
-  // ===== CAR DESCRIPTION FOR PROMPT =====
+  const applyPreset = (i: number) => {
+    setColors(PR[i].colors);
+    setTrimId(PR[i].trim);
+    setRandomTag(null);
+    setPreset(i);
+    notify({ color: PR[i].colors.sb_d, title: PR[i].name, sub: 'Пресет применён' });
+  };
+
   const getCarDesc = () => {
-    const selectedMake = CAR_DATABASE.find(m => m.name === carMake);
-    const selectedModelObj = selectedMake?.models.find(m => `${m.name} (${m.body})` === carModel);
     if (!carMake) return 'car';
+    const ext = EXTERIOR_COLORS.find(c => c.name === extColor);
     let desc = '';
-    if (extColor) desc += `${extColor} `;
+    if (ext) desc += `${ext.name} `;
     if (carYear) desc += `${carYear} `;
     desc += carMake;
-    if (selectedModelObj) desc += ` ${selectedModelObj.name} ${selectedModelObj.body} ${selectedModelObj.type}`;
+    if (modelObj) desc += ` ${modelObj.name} ${modelObj.body} ${modelObj.type}`;
     return desc.trim();
   };
 
-  const getCameraPrompt = () => {
-    return CAMERA_ANGLES.find(a => a.id === cameraAngle)?.prompt || CAMERA_ANGLES[0].prompt;
-  };
-
-  const getAlcantaraPrompt = () => {
-    if (alcantaraZones.length === 0) return null;
-    const parts = alcantaraZones
-      .map(id => ALCANTARA_ZONES.find(z => z.id === id)?.promptText)
-      .filter(Boolean);
-    return `ALCANTARA SUEDE APPLIED to: ${parts.join('; ')}. Matte fuzzy suede texture (not leather) with subtle directional nap, visibly distinct from the smooth leather on adjacent panels.`;
-  };
-
-  const getStitchPrompt = () => {
-    const s = STITCH_PATTERNS.find(p => p.id === stitchPattern);
-    if (!s) return null;
-    return `STITCHING / QUILTING PATTERN: ${s.promptText}. The pattern must be consistent across all seats (front and rear where present).`;
-  };
-
   const getPromptText = () => {
-    const h = (id: string) => (colors[id] || "#1A1A1A").toUpperCase();
-
+    const h = (id: string) => (colors[id] || '#1A1A1A').toUpperCase();
     const trimEn = trimId === 'carbon' ? 'carbon fiber' : trimId === 'wood_m' ? 'matte dark wood' : trimId === 'wood_c' ? 'walnut wood' : trimId === 'leather' ? 'leather-wrapped' : `custom color ${trimColor}`;
-    const u = [...new Set(AZ.map(z => h(z.id)))].length;
-    const carDesc = getCarDesc();
-    const camPrompt = getCameraPrompt();
-    const alcLine = getAlcantaraPrompt();
-    const stitchLine = getStitchPrompt();
+    const u = [...new Set(zones.map(z => h(z.id)))].length;
+    const cam = CAMERA_ANGLES.find(a => a.id === cameraAngle)?.prompt || CAMERA_ANGLES[0].prompt;
+    const alc = alcantaraZones.map(id => ALCANTARA_ZONES.find(z => z.id === id)?.promptText).filter(Boolean);
+    const st = STITCH_PATTERNS.find(p => p.id === stitchPattern);
 
-    const lines = [
-      `Photorealistic interior of ${carDesc}, custom leather upholstery.`,
-      `${camPrompt} ${u} distinct colors used, premium leather & alcantara materials.`,
-      `SEATS — Driver: base ${h("sb_d")}, bolsters ${h("sv_d")}, headrest ${h("hr_d")}. Passenger: base ${h("sb_p")}, bolsters ${h("sv_p")}, headrest ${h("hr_p")}.`,
-      `DOORS — Left: upper panel ${h("du_l")}, accent strip ${h("da_l")}, main insert ${h("di_l")}, kick panel ${h("dl_l")}, handle ${h("dh_l")}. Right: upper panel ${h("du_r")}, accent strip ${h("da_r")}, main insert ${h("di_r")}, kick panel ${h("dl_r")}, handle ${h("dh_r")}.`,
-      `STEERING WHEEL — Top rim ${h("sw_t")}, side grips ${h("sw_s")}, bottom rim ${h("sw_b")}, spokes ${h("sw_sp")}, center airbag pad ${h("sw_c")}. OEM 3-spoke design.`,
-      `CENTER CONSOLE — Shift knob ${h("sk")}, shift boot ${h("sbo")}, handbrake handle ${h("hh")}, handbrake boot ${h("hbo")}, armrest lid ${h("arm")}, tunnel cover ${h("con")}.`,
-      `DASHBOARD — Upper dashboard ${h("dt")}, lower dashboard ${h("db")}. Trim inlays: ${trimEn}.`,
-      `FLOOR — Driver mat ${h("mat_d")}, passenger mat ${h("mat_p")}. Driver footwell ${h("fw_d")}, passenger footwell ${h("fw_p")}.`,
-      `ACCENTS — Contrast stitching thread ${h("st")}. Piping/welting ${h("pp")}.`,
-      stitchLine,
-      alcLine,
-      `Studio lighting, 8K resolution, hyper-detailed leather grain texture, all factory controls and gauges visible.`
-    ].filter(Boolean);
-
-    return lines.join("\n\n");
+    return [
+      `Photorealistic interior of ${getCarDesc()}, custom leather upholstery.`,
+      `${cam} ${u} distinct colors used, premium leather & alcantara materials.`,
+      `SEATS — Driver: base ${h('sb_d')}, bolsters ${h('sv_d')}, headrest ${h('hr_d')}. Passenger: base ${h('sb_p')}, bolsters ${h('sv_p')}, headrest ${h('hr_p')}.`,
+      `DOORS — Left: upper panel ${h('du_l')}, accent strip ${h('da_l')}, main insert ${h('di_l')}, kick panel ${h('dl_l')}, handle ${h('dh_l')}. Right: upper panel ${h('du_r')}, accent strip ${h('da_r')}, main insert ${h('di_r')}, kick panel ${h('dl_r')}, handle ${h('dh_r')}.`,
+      `STEERING WHEEL — Top rim ${h('sw_t')}, side grips ${h('sw_s')}, bottom rim ${h('sw_b')}, spokes ${h('sw_sp')}, center airbag pad ${h('sw_c')}. Factory steering wheel shape for this model.`,
+      `CENTER CONSOLE — Shift knob ${h('sk')}, shift boot ${h('sbo')}, handbrake handle ${h('hh')}, handbrake boot ${h('hbo')}, armrest lid ${h('arm')}, tunnel cover ${h('con')}.`,
+      `DASHBOARD — Upper dashboard ${h('dt')}, lower dashboard ${h('db')}. Trim inlays: ${trimEn}.`,
+      `FLOOR — Driver mat ${h('mat_d')}, passenger mat ${h('mat_p')}. Driver footwell ${h('fw_d')}, passenger footwell ${h('fw_p')}.`,
+      hasRear ? `REAR ROW — Bench center panels ${h('rs_b')}, bench bolsters/sides ${h('rs_v')}, rear headrests ${h('rhr')}, rear floor mats ${h('rmat')}. Rear door cards match the front doors.` : null,
+      hasRear ? `TRUNK / CARGO AREA — carpet and side trim ${h('tr')}.` : null,
+      `ACCENTS — Contrast stitching thread ${h('st')}. Piping/welting ${h('pp')}.`,
+      st ? `STITCHING / QUILTING PATTERN: ${st.promptText}. The pattern must be consistent across all seats (front and rear where present).` : null,
+      alc.length ? `ALCANTARA SUEDE APPLIED to: ${alc.join('; ')}. Matte fuzzy suede texture (not leather) with subtle directional nap, visibly distinct from the smooth leather on adjacent panels.` : null,
+      'Studio lighting, 8K resolution, hyper-detailed leather grain texture, all factory controls and gauges visible.',
+    ].filter(Boolean).join('\n\n');
   };
 
-  // ===== HEADER TITLE — split into brand + model for serif styling =====
-  const headerBrand = carMake || 'Car';
-  const headerModel = carModel ? carModel.split(' (')[0] : '';
+  const cycleTheme = () => {
+    const next = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
+    setTheme(next);
+    const icon = next === 'light' ? <Sun size={18} /> : next === 'dark' ? <Moon size={18} /> : <Auto size={18} />;
+    notify({ icon, title: `Тема: ${THEME_NAMES[next].toLowerCase()}` });
+  };
 
-  const carSubtitle = (() => {
-    const mk = CAR_DATABASE.find(m => m.name === carMake);
-    const md = mk?.models.find(m => `${m.name} (${m.body})` === carModel);
-    if (!carMake) return 'Upholstery Visualizer';
-    const parts = ['Upholstery Visualizer'];
-    if (md) parts.push(`${md.body}`);
-    if (carYear) parts.push(carYear);
-    if (md) parts.push(md.type);
-    return parts.join(' · ');
-  })();
+  const presetsRow = (
+    <div className="presets" role="group" aria-label="Пресеты">
+      {PR.map((p, i) => (
+        <button key={p.name} className={`preset${preset === i ? ' on' : ''}`} onClick={() => applyPreset(i)}>
+          <i style={{ background: `linear-gradient(135deg, ${p.colors.sb_d} 50%, ${p.colors.sv_d} 50%)` }} />
+          {p.name}
+        </button>
+      ))}
+      {randomTag && (
+        <span className="preset ghost">
+          <Sparkles size={14} />
+          {randomTag}
+        </span>
+      )}
+    </div>
+  );
+
+  const headerModel = carModel ? carModel.split(' (')[0] : '';
+  const subtitle = [modelObj?.body, carYear, modelObj?.type].filter(Boolean).join(' · ');
+  const uniq = [...new Set(zones.map(z => (colors[z.id] || '#1A1A1A').toUpperCase()))].length;
 
   return (
-    <div className="app-root">
-      {/* HEADER */}
-      <header className="app-header">
-        <div className="header-top">
-          <div>
-            <h1 className="title-main">
-              {headerBrand} {headerModel && <em>{headerModel}</em>}
-            </h1>
-            <p className="title-sub">{carSubtitle}</p>
-          </div>
-          <div className="header-actions">
-            <button onClick={doRandom} className="btn btn-primary">✦ Рандом</button>
-            <div className="seg seg-icon" role="group" aria-label="Ориентация">
-              <button
-                className={!isHorizontal ? 'on' : ''}
-                onClick={() => setIsHorizontal(false)}
-                aria-label="Вертикально"
-                title="Вертикально"
-              >
-                <svg width="12" height="16" viewBox="0 0 12 16" fill="none" aria-hidden="true">
-                  <rect x="1" y="1" width="10" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
-                </svg>
-              </button>
-              <button
-                className={isHorizontal ? 'on' : ''}
-                onClick={() => setIsHorizontal(true)}
-                aria-label="Горизонтально"
-                title="Горизонтально"
-              >
-                <svg width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden="true">
-                  <rect x="1" y="1" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
-                </svg>
-              </button>
-            </div>
-          </div>
+    <div className="app" style={{ '--glow': colors.sb_d || '#1A1A1A' } as CSSProperties}>
+      <Island msg={msg} onDone={clearMsg} />
+
+      <nav className={`navbar${scrolled ? ' scrolled' : ''}`}>
+        <span className="nav-title">{carMake} {headerModel}{subtitle && <small>{subtitle}</small>}</span>
+        <div className="nav-actions">
+          <button className="glass-btn icon" onClick={cycleTheme} aria-label={`Тема: ${THEME_NAMES[theme]}`} title={`Тема: ${THEME_NAMES[theme]}`}>
+            {theme === 'light' ? <Sun size={19} /> : theme === 'dark' ? <Moon size={19} /> : <Auto size={19} />}
+          </button>
+          <button className="glass-btn" onClick={doRandom}>
+            <Dice size={18} />
+            <span>Случайно</span>
+          </button>
         </div>
-        {randomTag && (
-          <p style={{ fontSize: '12.5px', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em' }}>
-            Палитра · <span style={{ color: 'var(--accent-2)' }}>{randomTag}</span>
-          </p>
-        )}
-        <div className="presets-row">
-          {PR.map((p, i) => (
-            <button
-              key={i}
-              onClick={() => { setColors(p.colors); setTrimId(p.trim); setRandomTag(null); }}
-              className="chip"
-            >
-              {p.name}
-            </button>
-          ))}
-        </div>
+      </nav>
+
+      <header className="hero">
+        <p className="eyebrow">Конфигуратор салона</p>
+        <h1>{carMake || 'Авто'} <span>{headerModel}</span></h1>
+        {subtitle && <p className="hero-sub">{subtitle}</p>}
+        {presetsRow}
       </header>
 
-      {/* ===== MAIN ===== */}
-      {(() => {
-        const svgBlock = (
-          <>
-            <div className="svg-wrapper">
-              <CarInteriorSVG colors={colors} activeZone={activeZone} onZoneClick={setActiveZone} trimId={trimId} trimColor={trimColor} />
-            </div>
-            {carSubtitle && <div className="car-subtitle">{carSubtitle}</div>}
-            {!isHorizontal && (
-              <QuickColorBar activeZone={activeZone} colors={colors} onColorChange={handleQuickColor} />
-            )}
-          </>
-        );
-
-        const miniPalette = (
-          <div className="panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-              {AZ.map(z => (
-                <div key={z.id} title={z.l} onClick={() => setActiveZone(z.id)} style={{
-                  width: '24px', height: '24px', borderRadius: '7px',
-                  backgroundColor: colors[z.id] || '#1A1A1A',
-                  border: activeZone === z.id ? '2px solid var(--accent)' : '1px solid var(--line-strong)',
-                  boxShadow: activeZone === z.id ? '0 0 0 1px var(--accent-soft)' : 'inset 0 1px 0 rgba(255,255,255,0.1)',
-                  cursor: 'pointer', transition: 'all 0.15s var(--ease)'
-                }} />
-              ))}
-            </div>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-3)', letterSpacing: '0.08em' }}>
-              {AZ.length} зон · {[...new Set(AZ.map(z => (colors[z.id] || '#1A1A1A').toUpperCase()))].length} уникальных
-            </p>
+      <main className="layout">
+        <section className="stage-col">
+          <div className="stage">
+            <CabinMap
+              colors={colors} activeZone={activeZone} onZoneClick={setActiveZone}
+              trimId={trimId} trimColor={trimColor} hasRear={hasRear}
+              stitchPattern={stitchPattern} alcantaraZones={alcantaraZones}
+            />
           </div>
-        );
+          <ColorSheet
+            zoneId={activeZone}
+            label={activeZone ? LABELS[activeZone] || '' : ''}
+            colors={colors}
+            onChange={setZoneColor}
+            onClose={() => setActiveZone(null)}
+          />
+        </section>
 
-        const settingsBlock = (
-          <>
-            {isHorizontal && (
-              <QuickColorBar activeZone={activeZone} colors={colors} onColorChange={handleQuickColor} />
-            )}
+        <section className="settings">
+          <div className="desk-only">
+            <Section title="Пресеты">{presetsRow}</Section>
+          </div>
+          <Section title="Автомобиль">
             <CarSelector
               make={carMake} setMake={setCarMake}
-              model={carModel} setModel={setCarModel}
+              model={carModel} setModel={changeModel}
               year={carYear} setYear={setCarYear}
               extColor={extColor} setExtColor={setExtColor}
             />
-            <CameraAngleSelector selected={cameraAngle} onSelect={setCameraAngle} carType={(() => {
-              const mk = CAR_DATABASE.find(m => m.name === carMake);
-              const md = mk?.models.find(m => `${m.name} (${m.body})` === carModel);
-              return md?.type || null;
-            })()} />
-            <AlcantaraSelector
-              selected={alcantaraZones}
-              onToggle={(id) => setAlcantaraZones(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
-              onClear={() => setAlcantaraZones([])}
-            />
-            <StitchSelector selected={stitchPattern} onSelect={setStitchPattern} />
-            <RightPanel colors={colors} setColors={setColors} activeZone={activeZone} setActiveZone={setActiveZone} trimId={trimId} setTrimId={setTrimId} trimColor={trimColor} setTrimColor={setTrimColor} />
-            {miniPalette}
-            <AIPrompt promptText={getPromptText()} />
-          </>
-        );
+          </Section>
 
-        if (isHorizontal) {
-          return (
-            <div className="main-wrap hz">
-              <div className="col-left">{svgBlock}</div>
-              <div className="col-right">{settingsBlock}</div>
+          <Section
+            title="Ракурс"
+            footer={hasRear ? 'Ракурс уходит в промпт для генерации.' : 'Ракурсы задних сидений и багажника появятся у 4-дверных машин.'}
+          >
+            <div className="group pad-y">
+              <CameraAngleSelector selected={cameraAngle} onSelect={setCameraAngle} carType={carType} />
             </div>
-          );
-        }
-        return (
-          <div className="main-wrap vt">
-            {svgBlock}
-            {settingsBlock}
+          </Section>
+
+          <div id="sec-trim">
+            <Section title="Декор торпедо">
+              <div className="group pad">
+                <TrimPicker trimId={trimId} setTrimId={setTrimId} trimColor={trimColor} setTrimColor={setTrimColor} dashColor={colors.dt || '#1A1A1A'} />
+              </div>
+            </Section>
           </div>
-        );
-      })()}
+
+          <Section title="Строчка">
+            <div className="group pad-y">
+              <StitchPicker selected={stitchPattern} onSelect={setStitchPattern} seat={colors.sb_d || '#1A1A1A'} thread={colors.st || '#888'} />
+            </div>
+          </Section>
+
+          <Section
+            title="Алькантара"
+            action={alcantaraZones.length > 0 && <button className="link-btn" onClick={() => setAlcantaraZones([])}>Сбросить</button>}
+          >
+            <div className="group pad">
+              <AlcantaraPicker
+                selected={alcantaraZones}
+                onToggle={id => setAlcantaraZones(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
+              />
+            </div>
+          </Section>
+
+          <Section title="Цвета деталей" footer={`${zones.length} деталей · ${uniq} цветов`}>
+            <ZoneList colors={colors} activeZone={activeZone} setActiveZone={setActiveZone} hasRear={hasRear} />
+          </Section>
+
+          <Section title="Промпт" footer="Вставьте в Nano Banana или другую нейросеть.">
+            <AIPrompt
+              promptText={getPromptText()}
+              onCopied={ok => notify(ok
+                ? { icon: <Check size={18} strokeWidth={2.6} />, title: 'Промпт скопирован', sub: 'Можно вставлять в Nano Banana' }
+                : { icon: <Copy size={18} />, title: 'Не получилось скопировать', sub: 'Выделите текст вручную' })}
+            />
+          </Section>
+        </section>
+      </main>
     </div>
   );
 }

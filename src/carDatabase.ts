@@ -961,6 +961,20 @@ export const CAMERA_ANGLES: CameraAngle[] = [
     requires4Door: true
   },
   {
+    id: "trunk_open",
+    nameRu: "Открытый багажник",
+    icon: "",
+    prompt: "Camera positioned behind the car at the open trunk / tailgate, slightly above the bumper line, looking straight into the cargo area. Trunk lid or tailgate fully open. Visible: the whole luggage compartment lining — trunk floor carpet, side trim panels, the inner side of the trunk lid, loading sill scuff plate, tie-down hooks, the backs of the rear seats forming the front wall of the cargo area. Cargo area empty and clean. Soft even light, focus on the trim materials and stitching.",
+    requires4Door: true
+  },
+  {
+    id: "trunk_in",
+    nameRu: "Из багажника в салон",
+    icon: "",
+    prompt: "Camera placed inside the cargo area with the rear seats in place, at headrest height on the centerline, looking forward through the whole cabin. Foreground: backs of the rear seats and rear headrests, edges of the trunk lining. Middle: the full rear bench seen from behind, rear door cards on both sides. Background: backs of the front seats and headrests, center console and the dashboard with the windshield showing a soft blurred environment. Wide-angle, sharp focus from the rear seats to the dashboard.",
+    requires4Door: true
+  },
+  {
     id: "wide_front",
     nameRu: "Панорама спереди",
     icon: "📐",

@@ -21,7 +21,13 @@ export const TRIMS = [
   { id: "custom", n: "Выбрать свою..." } // Custom button hook
 ];
 
-export const ZG = [
+export interface ZoneGroup {
+  g: string;
+  rear?: boolean;
+  zones: { id: string; l: string }[];
+}
+
+export const ZG: ZoneGroup[] = [
   {
     g: "СИДЕНЬЯ",
     zones: [
@@ -86,6 +92,17 @@ export const ZG = [
     ]
   },
   {
+    g: "ЗАДНИЙ РЯД И БАГАЖНИК",
+    rear: true,
+    zones: [
+      { id: "rs_b", l: "Задний диван — центр" },
+      { id: "rs_v", l: "Задний диван — боковины" },
+      { id: "rhr", l: "Задние подголовники" },
+      { id: "rmat", l: "Задние коврики" },
+      { id: "tr", l: "Багажник — обивка" }
+    ]
+  },
+  {
     g: "АКЦЕНТЫ",
     zones: [
       { id: "st", l: "Строчка (нить)" },
@@ -95,6 +112,19 @@ export const ZG = [
 ];
 
 export const AZ = ZG.flatMap(g => g.zones);
+export const REAR_IDS = ZG.filter(g => g.rear).flatMap(g => g.zones.map(z => z.id));
+export const zonesFor = (hasRear: boolean) => ZG.filter(g => hasRear || !g.rear);
+
+// rear row follows the passenger side unless set explicitly
+export function withRear(c: Record<string, string>, o: Record<string, string> = {}): Record<string, string> {
+  return {
+    ...c,
+    rs_b: o.rs_b ?? c.sb_p,
+    rs_v: o.rs_v ?? c.sv_p,
+    rhr: o.rhr ?? c.hr_p,
+    rmat: o.rmat ?? c.mat_p,
+  };
+}
 export const DEF: Record<string, string> = {};
 AZ.forEach(z => (DEF[z.id] = "#1A1A1A"));
 DEF.st = "#1A1A1A";
@@ -108,7 +138,7 @@ DEF.sw_s = "#1A1A1A";
 DEF.sw_sp = "#8A8A8E"; // metal spokes by default
 DEF.sw_c = "#1A1A1A"; // airbag pad
 
-const P = (o: Record<string, string>) => ({ ...DEF, ...o });
+const P = (o: Record<string, string>) => withRear({ ...DEF, ...o }, o);
 
 export const PR = [
   { name: "Сток чёрный", colors: { ...DEF }, trim: "carbon" },
@@ -240,6 +270,6 @@ export function genR() {
   const noun = NOUN[Math.floor(r() * NOUN.length)];
   const tag = `${adj} ${noun}`;
 
-  return { colors: c, tag, trim };
+  return { colors: withRear(c), tag, trim };
 }
 
